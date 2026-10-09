@@ -46,4 +46,6 @@ jobs:
           cache: maven
 
       - name: Compile
-        run: ./mvnw -B -DskipTests compile
+        run: |
+          chmod +x ./mvnw
+          ./mvnw -B -DskipTests compile
