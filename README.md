@@ -71,7 +71,7 @@ Prérequis GitHub : activer **Allow auto-merge** (Settings → General) et, si t
 
 ## Convention de branches
 
-Format contrôlé par la CI sur les PR vers `main` :
+Format contrôlé en premier job CI sur les PR vers `main` (si le nom est invalide, front / back / Sonar ne démarrent pas) :
 
 ```
 type/issue-XXX-description-courte
