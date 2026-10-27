@@ -36,7 +36,26 @@ Compile uniquement : `./mvnw -DskipTests compile`
 
 ## CI
 
-Les GitHub Actions vérifient que le front (`npm run build`) et le back (`./mvnw compile`) compilent à chaque push / PR sur `main`.
+Les GitHub Actions vérifient que le front (`npm run build`) et le back (`./mvnw compile`) compilent à chaque push / PR sur `main`, puis lancent une analyse SonarQube.
+
+### Secrets SonarQube
+
+À configurer dans GitHub → Settings → Secrets and variables → Actions :
+
+| Secret | Description |
+|--------|-------------|
+| `SONAR_TOKEN` | Token d’authentification SonarQube / SonarCloud |
+| `SONAR_HOST_URL` | URL du serveur SonarQube (ex. `https://sonarcloud.io` ou votre instance) |
+
+Adapter aussi `sonar.projectKey` (et `sonar.organization` pour SonarCloud) dans `sonar-project.properties`.
+
+### Rapport Sonar dans les PR (vers `main`)
+
+Sur les PR ciblant `main`, SonarCloud publie un check **SonarCloud Code Analysis**, un résumé dans Conversation, et des annotations sur les lignes concernées — à condition que :
+
+1. Le projet soit **lié à GitHub** dans SonarCloud (Analyze new project via GitHub, pas un projet « manuel » seul)
+2. Les secrets `SONAR_TOKEN` / `SONAR_HOST_URL` soient configurés
+3. (Optionnel) Pour bloquer le merge si le quality gate échoue : GitHub → Settings → Rules / Branch protection → require status check **`SonarCloud Code Analysis`**
 
 ## Convention de commits
 
