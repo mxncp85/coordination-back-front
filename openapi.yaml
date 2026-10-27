@@ -1,0 +1,875 @@
+openapi: 3.0.3
+info:
+  title: Capuches d'Opale API
+  version: 0.1.0
+  description: |
+    API de la guilde : requêtes, équipes, aventuriers, inventaire, comptes.
+
+    - Tout est en JSON, préfixe `/api`
+    - Les montants sont des entiers en bronze (1 PO = 100 bronze)
+    - Listes paginées : `page` (dès 0) et `size`, réponse `{content, page, size, totalElements, totalPages}`
+    - Erreurs : `{code, message, details[]}`
+    - Auth JWT à partir du sprint 2, toutes les routes sont protégées sauf `/api/health`, `/api/hello` et `/api/auth/login`
+    - Les dates sans heure utilisent le format ISO 8601 `YYYY-MM-DD`; la règle exacte d'expiration d'une requête reste à confirmer
+    - Les prévisions exposent historique et scénarios; leur horizon et leur fréquence restent à définir
+servers:
+  - url: http://localhost:8080
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Requêtes
+  - name: Équipes
+  - name: Missions
+  - name: Aventuriers
+  - name: Inventaire
+  - name: Comptes
+
+paths:
+  /api/health:
+    get:
+      summary: État du service
+      operationId: health
+      security: []
+      responses:
+        '200':
+          description: Service opérationnel
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, service]
+                properties:
+                  status: { type: string, example: UP }
+                  service: { type: string, example: Les Capuches d'Opale }
+
+  /api/hello:
+    get:
+      summary: Test front/back
+      operationId: hello
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message]
+                properties:
+                  message: { type: string }
+
+  /api/auth/login:
+    post:
+      summary: Connexion
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identifiant, motDePasse]
+              properties:
+                identifiant: { type: string, minLength: 1 }
+                motDePasse: { type: string, format: password, minLength: 1 }
+      responses:
+        '200':
+          description: Token JWT
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token, expireLe]
+                properties:
+                  token: { type: string }
+                  expireLe: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Erreur' }
+
+  # ---------- Requêtes ----------
+  /api/requetes:
+    get:
+      tags: [Requêtes]
+      summary: Liste des requêtes
+      operationId: listRequetes
+      parameters:
+        - { name: statut, in: query, schema: { $ref: '#/components/schemas/StatutRequete' } }
+        - { name: primeMin, in: query, description: Doit être inférieur ou égal à primeMax si les deux sont fournis., schema: { type: integer, format: int64, minimum: 0 } }
+        - { name: primeMax, in: query, description: Doit être supérieur ou égal à primeMin si les deux sont fournis., schema: { type: integer, format: int64, minimum: 0 } }
+        - { name: niveau, in: query, description: Exp_rec de la quête, schema: { type: integer, minimum: 0 } }
+        - { name: echeanceAvant, in: query, schema: { type: string, format: date } }
+        - { name: commanditaire, in: query, description: recherche partielle, schema: { type: string, minLength: 1 } }
+        - { name: tri, in: query, schema: { type: string, enum: [prime, echeance, niveau], default: echeance } }
+        - { name: ordre, in: query, schema: { type: string, enum: [asc, desc], default: asc } }
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    required: [content]
+                    properties:
+                      content:
+                        type: array
+                        items: { $ref: '#/components/schemas/Requete' }
+        '401': { $ref: '#/components/responses/Erreur' }
+    post:
+      tags: [Requêtes]
+      summary: Créer une requête (statut NOUVELLE)
+      operationId: createRequete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RequeteInput' }
+      responses:
+        '201':
+          description: Créée
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Requete' }
+        '400': { $ref: '#/components/responses/Erreur' }
+        '401': { $ref: '#/components/responses/Erreur' }
+
+  /api/requetes/{id}:
+    parameters:
+      - $ref: '#/components/parameters/id'
+    get:
+      tags: [Requêtes]
+      summary: Détail d'une requête
+      operationId: getRequete
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Requete' }
+        '404': { $ref: '#/components/responses/Erreur' }
+        '401': { $ref: '#/components/responses/Erreur' }
+    put:
+      tags: [Requêtes]
+      summary: Modifier une requête
+      description: Seulement en NOUVELLE ou EQUIPE_VALIDEE, sinon 409.
+      operationId: updateRequete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RequeteInput' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Requete' }
+        '400': { $ref: '#/components/responses/Erreur' }
+        '404': { $ref: '#/components/responses/Erreur' }
+        '409': { $ref: '#/components/responses/Erreur' }
+        '401': { $ref: '#/components/responses/Erreur' }
+
+  # ---------- Équipes ----------
+  /api/requetes/{id}/equipe:
+    parameters:
+      - $ref: '#/components/parameters/id'
+    get:
+      tags: [Équipes]
+      summary: Équipe courante (Tq, coût, ratio)
+      operationId: getEquipe
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Equipe' }
+        '404': { $ref: '#/components/responses/Erreur' }
+        '401': { $ref: '#/components/responses/Erreur' }
+    put:
+      tags: [Équipes]
+      summary: Composer l'équipe (brouillon)
+      description: Remplace la composition. Les IDs doivent être uniques. 409 si un aventurier n'est pas disponible sur la durée de la quête.
+      operationId: setEquipe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [aventurierIds]
+              properties:
+                aventurierIds:
+                  type: array
+                  uniqueItems: true
+                  items: { type: integer, format: int64, minimum: 1 }
+                equipementIds:
+                  type: array
+                  uniqueItems: true
+                  items: { type: integer, format: int64, minimum: 1 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Equipe' }
+        '400': { $ref: '#/components/responses/Erreur' }
+        '404': { $ref: '#/components/responses/Erreur' }
+        '409': { $ref: '#/components/responses/Erreur' }
+        '401': { $ref: '#/components/responses/Erreur' }
+
+  /api/requetes/{id}/equipe/validation:
+    post:
+      tags: [Équipes]
+      summary: Valider l'équipe
+      description: Passe la requête en EQUIPE_VALIDEE et réserve aventuriers et équipements (tout ou rien).
+      operationId: validerEquipe
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Equipe' }
+        '404': { $ref: '#/components/responses/Erreur' }
+        '409': { $ref: '#/components/responses/Erreur' }
+        '401': { $ref: '#/components/responses/Erreur' }
+
+  /api/requetes/{id}/equipe/suggestion:
+    post:
+      tags: [Équipes]
+      summary: Suggérer une équipe (sprint 2)
+      description: Calcule une proposition sans l'enregistrer. 422 si aucune équipe complète n'est possible.
+      operationId: suggererEquipe
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Equipe' }
+        '404': { $ref: '#/components/responses/Erreur' }
+        '422': { $ref: '#/components/responses/Erreur' }
+        '401': { $ref: '#/components/responses/Erreur' }
+
+  # ---------- Missions ----------
+  /api/requetes/{id}/depart:
+    post:
+      tags: [Missions]
+      summary: Déclarer le départ
+      description: Équipe validée obligatoire. Encaisse l'acompte (20 % de la prime) et passe en EN_COURS. Un appel répété après le départ renvoie le résultat initial (avec le même transactionId) sans créer de nouvelle transaction.
+      operationId: depart
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  requete: { $ref: '#/components/schemas/Requete' }
+                  acompteBronze: { type: integer, format: int64 }
+                  transactionId: { type: integer, format: int64 }
+        '404': { $ref: '#/components/responses/Erreur' }
+        '409': { $ref: '#/components/responses/Erreur' }
+        '401': { $ref: '#/components/responses/Erreur' }
+
+  /api/requetes/{id}/cloture:
+    post:
+      tags: [Missions]
+      summary: Clôturer la mission
+      description: Atomique (transactions, XP, repos, durabilité). Une seule clôture possible, sinon 409.
+      operationId: cloture
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [resultat]
+              properties:
+                resultat: { type: string, enum: [SUCCES, ECHEC] }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  requete: { $ref: '#/components/schemas/Requete' }
+                  soldeEncaisseBronze: { type: integer, format: int64, description: 80 % de la prime, 0 si échec }
+                  xpAttribuee: { type: integer }
+                  paiements:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        aventurierId: { type: integer, format: int64 }
+                        montantBronze: { type: integer, format: int64 }
+                  repos:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        aventurierId: { type: integer, format: int64 }
+                        jours: { type: integer }
+                        finLe: { type: string, format: date }
+                  equipements:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        equipementId: { type: integer, format: int64 }
+                        durabiliteActuelle: { type: integer }
+                        statut: { $ref: '#/components/schemas/StatutEquipement' }
+        '400': { $ref: '#/components/responses/Erreur' }
+        '404': { $ref: '#/components/responses/Erreur' }
+        '409': { $ref: '#/components/responses/Erreur' }
+        '401': { $ref: '#/components/responses/Erreur' }
+
+  # ---------- Aventuriers ----------
+  /api/aventuriers:
+    get:
+      tags: [Aventuriers]
+      summary: Liste / recherche
+      operationId: listAventuriers
+      parameters:
+        - { name: nom, in: query, description: recherche partielle, schema: { type: string, minLength: 1 } }
+        - { name: specialite, in: query, description: l'aventurier doit avoir cette spécialité, schema: { $ref: '#/components/schemas/Specialite' } }
+        - { name: expMin, in: query, description: Doit être inférieur ou égal à expMax si les deux sont fournis., schema: { type: integer, minimum: 1 } }
+        - { name: expMax, in: query, description: Doit être supérieur ou égal à expMin si les deux sont fournis., schema: { type: integer, minimum: 1 } }
+        - { name: disponible, in: query, schema: { type: boolean } }
+        - { name: tri, in: query, schema: { type: string, enum: [nom, experience, tauxJournalier], default: nom } }
+        - { name: ordre, in: query, schema: { type: string, enum: [asc, desc], default: asc } }
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    required: [content]
+                    properties:
+                      content:
+                        type: array
+                        items: { $ref: '#/components/schemas/Aventurier' }
+        '401': { $ref: '#/components/responses/Erreur' }
+    post:
+      tags: [Aventuriers]
+      summary: Créer un aventurier
+      operationId: createAventurier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AventurierInput' }
+      responses:
+        '201':
+          description: Créé
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Aventurier' }
+        '400': { $ref: '#/components/responses/Erreur' }
+        '401': { $ref: '#/components/responses/Erreur' }
+
+  /api/aventuriers/{id}:
+    parameters:
+      - $ref: '#/components/parameters/id'
+    get:
+      tags: [Aventuriers]
+      summary: Fiche aventurier
+      operationId: getAventurier
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Aventurier' }
+        '404': { $ref: '#/components/responses/Erreur' }
+        '401': { $ref: '#/components/responses/Erreur' }
+    put:
+      tags: [Aventuriers]
+      summary: Modifier un aventurier
+      operationId: updateAventurier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AventurierInput' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Aventurier' }
+        '400': { $ref: '#/components/responses/Erreur' }
+        '404': { $ref: '#/components/responses/Erreur' }
+        '401': { $ref: '#/components/responses/Erreur' }
+    delete:
+      tags: [Aventuriers]
+      summary: Supprimer un aventurier
+      description: 409 s'il est dans une équipe réservée ou en mission.
+      operationId: deleteAventurier
+      responses:
+        '204': { description: Supprimé }
+        '404': { $ref: '#/components/responses/Erreur' }
+        '409': { $ref: '#/components/responses/Erreur' }
+        '401': { $ref: '#/components/responses/Erreur' }
+
+  # ---------- Inventaire ----------
+  /api/equipements:
+    get:
+      tags: [Inventaire]
+      summary: Liste des équipements
+      operationId: listEquipements
+      parameters:
+        - { name: statut, in: query, schema: { $ref: '#/components/schemas/StatutEquipement' } }
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    required: [content]
+                    properties:
+                      content:
+                        type: array
+                        items: { $ref: '#/components/schemas/Equipement' }
+        '401': { $ref: '#/components/responses/Erreur' }
+    post:
+      tags: [Inventaire]
+      summary: Acheter un équipement
+      description: Crée l'équipement et débite son prix du compte (transaction ACHAT).
+      operationId: acheterEquipement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EquipementInput' }
+      responses:
+        '201':
+          description: Acheté
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Equipement' }
+        '400': { $ref: '#/components/responses/Erreur' }
+        '401': { $ref: '#/components/responses/Erreur' }
+
+  /api/equipements/{id}:
+    get:
+      tags: [Inventaire]
+      summary: Détail d'un équipement
+      operationId: getEquipement
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Equipement' }
+        '404': { $ref: '#/components/responses/Erreur' }
+        '401': { $ref: '#/components/responses/Erreur' }
+
+  /api/equipements/{id}/reparation:
+    post:
+      tags: [Inventaire]
+      summary: Réparer un équipement
+      description: Durabilité au max, statut DISPONIBLE. TODO coût de réparation à confirmer avec le client.
+      operationId: reparerEquipement
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Equipement' }
+        '404': { $ref: '#/components/responses/Erreur' }
+        '409': { $ref: '#/components/responses/Erreur' }
+        '401': { $ref: '#/components/responses/Erreur' }
+
+  /api/consommables:
+    get:
+      tags: [Inventaire]
+      summary: Liste des consommables
+      operationId: listConsommables
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    required: [content]
+                    properties:
+                      content:
+                        type: array
+                        items: { $ref: '#/components/schemas/Consommable' }
+        '401': { $ref: '#/components/responses/Erreur' }
+    post:
+      tags: [Inventaire]
+      summary: Créer un consommable
+      operationId: createConsommable
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ConsommableInput' }
+      responses:
+        '201':
+          description: Créé
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Consommable' }
+        '400': { $ref: '#/components/responses/Erreur' }
+        '401': { $ref: '#/components/responses/Erreur' }
+
+  /api/consommables/{id}/achat:
+    post:
+      tags: [Inventaire]
+      summary: Acheter du stock
+      description: Augmente le stock et débite le compte. Même logique que l'achat auto en cas de manque.
+      operationId: acheterConsommable
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quantite]
+              properties:
+                quantite: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Consommable' }
+        '400': { $ref: '#/components/responses/Erreur' }
+        '404': { $ref: '#/components/responses/Erreur' }
+        '401': { $ref: '#/components/responses/Erreur' }
+
+  # ---------- Comptes ----------
+  /api/comptes/solde:
+    get:
+      tags: [Comptes]
+      summary: Solde actuel
+      operationId: getSolde
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [soldeBronze]
+                properties:
+                  soldeBronze: { type: integer, format: int64 }
+        '401': { $ref: '#/components/responses/Erreur' }
+
+  /api/comptes/transactions:
+    get:
+      tags: [Comptes]
+      summary: Historique (du plus récent au plus ancien)
+      operationId: listTransactions
+      parameters:
+        - { name: type, in: query, schema: { $ref: '#/components/schemas/TypeTransaction' } }
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Page'
+                  - type: object
+                    required: [content]
+                    properties:
+                      content:
+                        type: array
+                        items: { $ref: '#/components/schemas/Transaction' }
+        '401': { $ref: '#/components/responses/Erreur' }
+    post:
+      tags: [Comptes]
+      summary: Ajouter / retirer de l'argent à la main
+      description: montantBronze est toujours positif à la création; sens détermine crédit ou débit. Dans l'historique, montantBronze est signé (positif = crédit, négatif = débit). Une transaction ne se modifie jamais, une correction est une nouvelle transaction.
+      operationId: createTransaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [montantBronze, sens, libelle]
+              properties:
+                montantBronze: { type: integer, format: int64, minimum: 1 }
+                sens: { type: string, enum: [CREDIT, DEBIT] }
+                libelle: { type: string, minLength: 1 }
+      responses:
+        '201':
+          description: Créée
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Transaction' }
+        '400': { $ref: '#/components/responses/Erreur' }
+        '409': { $ref: '#/components/responses/Erreur' }
+        '401': { $ref: '#/components/responses/Erreur' }
+
+  /api/comptes/previsions:
+    get:
+      tags: [Comptes]
+      summary: Prévisions du solde (3 scénarios)
+      operationId: getPrevisions
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  historique: { $ref: '#/components/schemas/SerieSolde' }
+                  optimiste: { $ref: '#/components/schemas/SerieSolde' }
+                  pessimiste: { $ref: '#/components/schemas/SerieSolde' }
+                  realiste: { $ref: '#/components/schemas/SerieSolde' }
+                  hypotheses:
+                    type: array
+                    items: { type: string }
+        '401': { $ref: '#/components/responses/Erreur' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    id:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, format: int64, minimum: 1 }
+    page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 0, default: 0 }
+    size:
+      name: size
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+
+  responses:
+    Erreur:
+      description: Réponse d'erreur normalisée. Les valeurs de code sont stables et indépendantes du message localisé.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Erreur' }
+
+  schemas:
+    Erreur:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: VALIDATION pour une entrée invalide, AUTHENTICATION_FAILED pour une connexion refusée, UNAUTHENTICATED pour une absence de jeton valide, NOT_FOUND pour une ressource absente, CONFLICT pour un conflit métier, NO_SOLUTION pour une suggestion impossible.
+          enum: [VALIDATION, AUTHENTICATION_FAILED, UNAUTHENTICATED, NOT_FOUND, CONFLICT, NO_SOLUTION]
+          example: VALIDATION
+        message: { type: string }
+        details:
+          type: array
+          items:
+            type: object
+            required: [message]
+            properties:
+              champ: { type: string, minLength: 1 }
+              message: { type: string, minLength: 1 }
+
+    Page:
+      type: object
+      required: [page, size, totalElements, totalPages]
+      properties:
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }
+
+    StatutRequete:
+      type: string
+      description: NOUVELLE → EQUIPE_VALIDEE → EN_COURS → REUSSIE ou ECHOUEE. REJETEE si la date de péremption passe sans équipe validée.
+      enum: [NOUVELLE, EQUIPE_VALIDEE, EN_COURS, REUSSIE, ECHOUEE, REJETEE]
+
+    StatutEquipement:
+      type: string
+      enum: [DISPONIBLE, EMPRUNTE, EN_REPARATION]
+
+    Specialite:
+      type: string
+      enum: [ARCHER, BARBARE, PALADIN, MAGE_ARCANIQUE, PRETRE, GEOMANCIEN, ALCHIMISTE, FORGERON, ENCHANTEUR, MESSAGER, AUTRE]
+
+    TypeTransaction:
+      type: string
+      enum: [ACOMPTE, SOLDE, PAIEMENT_AVENTURIER, ACHAT, MANUEL]
+
+    RequeteInput:
+      type: object
+      required: [nom, description, dureeJours, datePeremption, primeBronze, commanditaire]
+      properties:
+        nom: { type: string, minLength: 1 }
+        description: { type: string, minLength: 1 }
+        dureeJours: { type: integer, minimum: 1 }
+        datePeremption: { type: string, format: date, description: doit être >= aujourd'hui }
+        primeBronze: { type: integer, format: int64, minimum: 1 }
+        commanditaire: { type: string, minLength: 1 }
+        expRecommandee: { type: integer, minimum: 0, default: 0, description: Exp_rec, utilisée pour Tq et le repos }
+        xpGagnee: { type: integer, minimum: 0, default: 0, description: XP par membre en cas de succès }
+
+    Requete:
+      allOf:
+        - $ref: '#/components/schemas/RequeteInput'
+        - type: object
+          required: [id, statut]
+          properties:
+            id: { type: integer, format: int64 }
+            statut: { $ref: '#/components/schemas/StatutRequete' }
+            dateDepart: { type: string, format: date, nullable: true }
+            dateCloture: { type: string, format: date, nullable: true }
+
+    AventurierInput:
+      type: object
+      required: [nom, specialites, experience, tauxBaseBronze]
+      properties:
+        nom: { type: string, minLength: 1 }
+        specialites:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/Specialite' }
+        experience: { type: integer, minimum: 1, description: "Exp_r, >= 1 à cause du log" }
+        tauxBaseBronze: { type: integer, format: int64, minimum: 1, description: J_base }
+
+    Aventurier:
+      allOf:
+        - $ref: '#/components/schemas/AventurierInput'
+        - type: object
+          required: [id, tauxJournalierBronze, statut]
+          properties:
+            id: { type: integer, format: int64 }
+            tauxJournalierBronze:
+              type: integer
+              format: int64
+              readOnly: true
+              description: J_base × (1 + 0,5 × ln(Exp_r)), arrondi au bronze
+            statut:
+              type: string
+              enum: [DISPONIBLE, EN_MISSION, EN_REPOS]
+              readOnly: true
+            disponibleLe: { type: string, format: date, nullable: true, readOnly: true }
+
+    Equipe:
+      type: object
+      required: [requeteId, membres, equipementIds, chanceReussite, coutBronze, complete, validee]
+      properties:
+        requeteId: { type: integer, format: int64 }
+        membres:
+          type: array
+          items:
+            type: object
+            properties:
+              aventurierId: { type: integer, format: int64 }
+              nom: { type: string }
+              experience: { type: integer }
+              tauxJournalierBronze: { type: integer, format: int64 }
+              ti: { type: number, description: TODO formule à confirmer (Q1) }
+        equipementIds:
+          type: array
+          items: { type: integer, format: int64 }
+        chanceReussite: { type: number, nullable: true, description: Tq entre 0 et 1, null si équipe vide }
+        coutBronze: { type: integer, format: int64, description: somme de J_actuel × durée }
+        ratioCoutPrime: { type: number, nullable: true }
+        complete: { type: boolean, description: TODO critère à confirmer (Q4) }
+        validee: { type: boolean }
+
+    EquipementInput:
+      type: object
+      required: [nom, type, durabiliteMax, prixAchatBronze]
+      properties:
+        nom: { type: string, minLength: 1 }
+        type: { type: string, minLength: 1, example: arme }
+        durabiliteMax: { type: integer, minimum: 1, description: en jours d'utilisation }
+        prixAchatBronze: { type: integer, format: int64, minimum: 0 }
+
+    Equipement:
+      allOf:
+        - $ref: '#/components/schemas/EquipementInput'
+        - type: object
+          required: [id, durabiliteActuelle, statut]
+          properties:
+            id: { type: integer, format: int64 }
+            durabiliteActuelle: { type: integer }
+            statut: { $ref: '#/components/schemas/StatutEquipement' }
+
+    ConsommableInput:
+      type: object
+      required: [nom, quantite, prixUnitaireBronze]
+      properties:
+        nom: { type: string, minLength: 1 }
+        quantite: { type: integer, minimum: 0 }
+        prixUnitaireBronze: { type: integer, format: int64, minimum: 0 }
+
+    Consommable:
+      allOf:
+        - $ref: '#/components/schemas/ConsommableInput'
+        - type: object
+          required: [id, stockBas]
+          properties:
+            id: { type: integer, format: int64 }
+            stockBas: { type: boolean, readOnly: true }
+
+    Transaction:
+      type: object
+      required: [id, date, montantBronze, libelle, type]
+      properties:
+        id: { type: integer, format: int64 }
+        date: { type: string, format: date-time }
+        montantBronze: { type: integer, format: int64, description: positif = crédit, négatif = débit }
+        libelle: { type: string }
+        type: { $ref: '#/components/schemas/TypeTransaction' }
+        requeteId: { type: integer, format: int64, nullable: true }
+
+    SerieSolde:
+      type: array
+      items:
+        type: object
+        properties:
+          date: { type: string, format: date }
+          soldeBronze: { type: integer, format: int64 }
