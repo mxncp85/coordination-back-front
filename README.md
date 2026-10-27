@@ -57,6 +57,41 @@ Sur les PR ciblant `main`, SonarCloud publie un check **SonarCloud Code Analysis
 2. Les secrets `SONAR_TOKEN` / `SONAR_HOST_URL` soient configurés
 3. (Optionnel) Pour bloquer le merge si le quality gate échoue : GitHub → Settings → Rules / Branch protection → require status check **`SonarCloud Code Analysis`**
 
+### Dependabot
+
+Chaque lundi, Dependabot ouvre des PR pour mettre à jour :
+
+- les deps npm (`front/`)
+- les deps Maven (`back/`)
+- les GitHub Actions
+
+Les PR Dependabot sont auto-mergées (squash) dès que la CI passe. Config : `.github/dependabot.yml`.
+
+Prérequis GitHub : activer **Allow auto-merge** (Settings → General) et, si tu as une branch protection, exiger les checks CI avant merge.
+
+## Convention de branches
+
+Format contrôlé par la CI sur les PR vers `main` :
+
+```
+type/issue-XXX-description-courte
+```
+
+Exemples :
+
+```
+feat/issue-12-liste-aventuriers
+fix/issue-8-taux-journalier
+chore/issue-1-config-ci
+```
+
+Règles :
+
+- `type` ∈ `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
+- `XXX` = numéro de l’issue GitHub
+- description en kebab-case (minuscules, tirets)
+- exception : branches `dependabot/*`
+
 ## Convention de commits
 
 Format :
