@@ -68,6 +68,27 @@ Endpoint de santé : [http://localhost:8080/api/health](http://localhost:8080/ap
 
 Compile uniquement : `./mvnw -DskipTests compile`
 
+### Code généré depuis le contrat d'API
+
+Les interfaces des contrôleurs et les DTO sont **générés** à partir de [`openapi.yaml`](openapi.yaml) à chaque build (`openapi-generator-maven-plugin`), dans `back/target/generated-sources/openapi`. Ce code n'est jamais commité ni modifié à la main.
+
+- Interfaces : `fr.capuches.dopale.api` (`RequetesApi`, `AventuriersApi`, `InventaireApi`, `ComptesApi`…), une par tag du contrat
+- DTO : `fr.capuches.dopale.api.model` (`Requete`, `RequeteInput`, `Erreur`…)
+
+Un contrôleur implémente simplement l'interface générée :
+
+```java
+@RestController
+class RequeteController implements RequetesApi {
+    @Override
+    public ResponseEntity<Requete> createRequete(RequeteInput requeteInput) { ... }
+}
+```
+
+Après une modification du contrat, relancer `./mvnw -DskipTests compile` (dans IntelliJ : Maven → *Generate Sources and Update Folders*). Les tags du contrat doivent rester sans accents, car ils deviennent des noms de classes Java.
+
+Organisation du back : un package par fonctionnalité (`requete/`, `aventurier/`, `inventaire/`, `compte/`…). Les erreurs se lèvent avec les exceptions de `commun/exception` (`RessourceIntrouvableException` → 404, `ConflitMetierException` → 409, `ValidationMetierException` → 400) et sont converties au format `Erreur` du contrat ; les listes paginées passent par `commun/pagination/PaginationUtils`.
+
 ## CI
 
 Les GitHub Actions vérifient que le front (`npm run build`) et le back (`./mvnw compile`) compilent à chaque push / PR sur `main`, puis lancent une analyse SonarQube.
