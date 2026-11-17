@@ -66,6 +66,19 @@ Sous Windows : `.\mvnw.cmd spring-boot:run`
 
 Endpoint de santé : [http://localhost:8080/api/health](http://localhost:8080/api/health)
 
+### Emploi du temps des aventuriers
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| `GET` | `/api/adventurers/{id}/schedule?from=&to=` | Statut (disponible / en mission jusqu’au… / au repos jusqu’au…), missions, repos (US-21), calendrier |
+| `GET` | `/api/adventurers/availability?from=&to=` | Qui est libre sur la période (aucun chevauchement mission ou repos) |
+
+Données de démo (IDs fixes) :
+
+- Lyra : `11111111-1111-1111-1111-111111111111`
+- Borin : `22222222-2222-2222-2222-222222222222`
+- Sélène : `33333333-3333-3333-3333-333333333333`
+
 Compile uniquement : `./mvnw -DskipTests compile`
 
 ### Code généré depuis le contrat d'API
