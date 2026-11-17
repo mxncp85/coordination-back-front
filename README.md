@@ -6,12 +6,46 @@ Monorepo de gestion de guilde d'aventuriers (coordination front & back — Ynov 
 
 ```
 coordination-back-front/
-├── front/   # React + Vite + TypeScript
-├── back/    # Spring Boot (Java 21)
+├── front/              # React + Vite + TypeScript
+├── back/               # Spring Boot (Java 21)
+├── docker-compose.yml  # Lancement unique
 └── .github/workflows/ci.yml
 ```
 
-## Front (`front/`)
+## Démarrer avec Docker (recommandé)
+
+Prérequis : [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+
+```bash
+docker compose up --build
+```
+
+| Service | URL |
+|---------|-----|
+| Front (Vite) | [http://localhost:5173](http://localhost:5173) |
+| Back (API) | [http://localhost:8080](http://localhost:8080) |
+| Health | [http://localhost:8080/api/health](http://localhost:8080/api/health) |
+
+Les appels front vers `/api/*` sont proxifiés vers le back dans Docker.
+
+### Hot reload
+
+- **Front** : rechargement automatique (Vite HMR) dès que tu modifies le code dans `front/`.
+- **Back** : recompilation + redémarrage auto (DevTools) dès que tu modifies le code dans `back/src`.
+
+### Tout recompiler / relancer
+
+```bash
+docker compose up --build --force-recreate
+```
+
+Arrêt :
+
+```bash
+docker compose down
+```
+
+## Front (`front/`) — sans Docker
 
 ```bash
 cd front
@@ -21,7 +55,7 @@ npm run dev
 
 Build de production : `npm run build`
 
-## Back (`back/`)
+## Back (`back/`) — sans Docker
 
 ```bash
 cd back
