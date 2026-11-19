@@ -1,0 +1,334 @@
+.accounts-page {
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 36px;
+  color: var(--color-text);
+}
+
+.accounts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.accounts-eyebrow,
+.accounts-section-kicker {
+  margin-bottom: 8px;
+  color: var(--color-gold);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.accounts-header h1,
+.accounts-section-heading h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-family: 'Cinzel', serif;
+}
+
+.accounts-header h1 {
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+}
+
+.accounts-intro {
+  margin-top: 10px;
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+.accounts-header-icon {
+  color: var(--color-gold);
+  font-size: 2.5rem;
+}
+
+.accounts-balance-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 24px 0;
+  padding: 32px;
+  border: 1px solid var(--color-gold);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(ellipse at right, rgba(197, 161, 91, 0.15), transparent 65%),
+    var(--color-surface);
+  box-shadow: var(--shadow);
+}
+
+.accounts-balance-label {
+  color: var(--color-gold);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.accounts-balance-card h2 {
+  margin: 12px 0;
+  color: var(--color-text);
+  font-family: 'Cinzel', serif;
+  font-size: clamp(2rem, 5vw, 3rem);
+  overflow-wrap: anywhere;
+}
+
+.accounts-balance-card h2 span {
+  color: var(--color-gold);
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.accounts-balance-note {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.accounts-coin {
+  color: var(--color-gold);
+  font-size: 4rem;
+}
+
+.accounts-form-section,
+.accounts-history-section {
+  margin-bottom: 24px;
+  padding: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow);
+}
+
+.accounts-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 26px;
+}
+
+.accounts-section-heading h2 {
+  font-size: 1.35rem;
+}
+
+.accounts-section-heading > span {
+  color: var(--color-gold);
+  font-size: 1.5rem;
+}
+
+.accounts-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.accounts-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.accounts-form-group-full {
+  grid-column: 1 / -1;
+}
+
+.accounts-form-group label {
+  color: var(--color-text);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.accounts-page input,
+.accounts-page select {
+  width: 100%;
+  min-height: 44px;
+  padding: 11px 13px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.accounts-page input:focus,
+.accounts-page select:focus {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 3px rgba(197, 161, 91, 0.12);
+}
+
+.accounts-page input::placeholder {
+  color: #777d8c;
+}
+
+.accounts-form-hint {
+  margin: 20px 0;
+  color: var(--color-muted);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.accounts-submit-button {
+  min-height: 44px;
+  padding: 11px 20px;
+  border: 1px solid var(--color-gold);
+  border-radius: var(--radius-sm);
+  background: var(--color-gold);
+  color: #171923;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.accounts-submit-button:hover:not(:disabled) {
+  background: var(--color-gold-hover);
+}
+
+.accounts-submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.accounts-history-count {
+  color: var(--color-muted) !important;
+  font-size: 0.85rem !important;
+}
+
+.accounts-table-container {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.accounts-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.accounts-table th {
+  padding: 15px 14px;
+  background: var(--color-surface-raised);
+  color: var(--color-gold);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.accounts-table td {
+  padding: 15px 14px;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 0.85rem;
+}
+
+.accounts-transaction-label {
+  font-weight: 600;
+}
+
+.accounts-type-tag {
+  display: inline-flex;
+  padding: 5px 9px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-gold-hover);
+  font-size: 0.73rem;
+  white-space: nowrap;
+}
+
+.accounts-amount-positive {
+  color: var(--color-success) !important;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.accounts-amount-negative {
+  color: var(--color-danger) !important;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.accounts-message {
+  display: flex;
+  gap: 10px;
+  margin: 16px 0;
+  padding: 13px 16px;
+  border: 1px solid;
+  border-radius: var(--radius-sm);
+  line-height: 1.5;
+}
+
+.accounts-message-error {
+  border-color: rgba(200, 121, 121, 0.4);
+  background: rgba(200, 121, 121, 0.08);
+  color: var(--color-danger);
+}
+
+.accounts-message-success {
+  border-color: rgba(120, 169, 137, 0.4);
+  background: rgba(120, 169, 137, 0.08);
+  color: var(--color-success);
+}
+
+.accounts-empty,
+.accounts-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 20px;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.accounts-empty span,
+.accounts-loading span {
+  color: var(--color-gold);
+  font-size: 2rem;
+}
+
+.accounts-loading {
+  min-height: 300px;
+}
+
+@media (max-width: 700px) {
+  .accounts-page {
+    padding: 22px 14px;
+  }
+
+  .accounts-form-section,
+  .accounts-history-section {
+    padding: 20px 15px;
+  }
+
+  .accounts-balance-card {
+    padding: 24px 18px;
+  }
+
+  .accounts-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .accounts-form-group-full {
+    grid-column: auto;
+  }
+
+  .accounts-submit-button {
+    width: 100%;
+  }
+
+  .accounts-section-heading h2 {
+    font-size: 1.1rem;
+  }
+
+  .accounts-table th,
+  .accounts-table td {
+    padding: 12px 10px;
+  }
+}
