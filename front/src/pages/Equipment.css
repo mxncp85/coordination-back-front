@@ -1,0 +1,96 @@
+
+.equipment-page {
+  flex: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: auto;
+  padding: 32px;
+}
+
+.equipment-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.equipment-stats article,
+.equipment-form-section,
+.equipment-list-section {
+  background: white;
+  padding: 24px;
+  border-radius: 10px;
+}
+
+.equipment-stats article p {
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.equipment-form-section,
+.equipment-list-section {
+  margin-bottom: 24px;
+}
+
+.equipment-page .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.equipment-page input,
+.equipment-page select {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.equipment-page button {
+  padding: 9px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #34302a;
+  color: white;
+}
+
+.equipment-filters {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+
+.equipment-filters > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.equipment-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.equipment-page table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.equipment-page th,
+.equipment-page td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .equipment-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .equipment-page {
+    padding: 16px;
+  }
+}
