@@ -1,474 +1,327 @@
 
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
+
+import {
+  getEquipements,
+  purchaseEquipement,
+  repairEquipement
+} from '../services/equipements'
+
+import type { Equipement } from '../types/models'
+
 import './Equipment.css'
 
-type Statut = 'disponible' | 'emprunté' | 'en réparation'
-
-interface Equipement {
-  id: number
-  nom: string
-  categorie: string
-  durabilite: number
-  durabiliteMax: number
-  prixAchat: number
-  coutReparation: number
-  statut: Statut
-}
-
-interface Transaction {
-  id: number
-  description: string
-  montant: number
-  type: 'achat'
-  date: string
-  equipementId: number
-}
+const TYPES_EQUIPEMENT = [
+  'ARME',
+  'ARMURE',
+  'ACCESSOIRE',
+  'AUTRE'
+]
 
 function Equipment() {
-  const [equipements, setEquipements] = useState<Equipement[]>(() => {
-    const saved = localStorage.getItem('equipements')
-    return saved ? JSON.parse(saved) as Equipement[] : []
-  })
-
-  const [transactions, setTransactions] = useState<Transaction[]>(() => {
-    const saved = localStorage.getItem('transactions')
-    return saved ? JSON.parse(saved) as Transaction[] : []
-  })
-
+  const [equipements, setEquipements] = useState<Equipement[]>([])
   const [nom, setNom] = useState('')
-  const [categorie, setCategorie] = useState('')
-  const [durabiliteMax, setDurabiliteMax] = useState(100)
-  const [prixAchat, setPrixAchat] = useState(0)
-  const [coutReparation, setCoutReparation] = useState(0)
-  const [achete, setAchete] = useState(false)
-
+  const [type, setType] = useState(TYPES_EQUIPEMENT[0])
+  const [durabiliteMax, setDurabiliteMax] = useState('')
+  const [prixAchat, setPrixAchat] = useState('')
   const [recherche, setRecherche] = useState('')
-  const [editingId, setEditingId] = useState<number | null>(null)
+  const [filtreStatut, setFiltreStatut] = useState('TOUS')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
-  // Sauvegarde locale
-  useEffect(() => {
-    localStorage.setItem('equipements', JSON.stringify(equipements))
-  }, [equipements])
-
-  useEffect(() => {
-    localStorage.setItem('transactions', JSON.stringify(transactions))
-  }, [transactions])
-
-  const resetForm = () => {
-    setNom('')
-    setCategorie('')
-    setDurabiliteMax(100)
-    setPrixAchat(0)
-    setCoutReparation(0)
-    setAchete(false)
-    setEditingId(null)
+  async function chargerEquipements() {
+    try {
+      setError('')
+      const data = await getEquipements()
+      setEquipements(data)
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Impossible de charger les équipements.'
+      )
+    } finally {
+      setLoading(false)
+    }
   }
 
-  // Création ou modification
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    void chargerEquipements()
+  }, [])
+
+  function resetForm() {
+    setNom('')
+    setType(TYPES_EQUIPEMENT[0])
+    setDurabiliteMax('')
+    setPrixAchat('')
+  }
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
-    if (
-      !nom.trim() ||
-      !categorie.trim() ||
-      durabiliteMax <= 0 ||
-      prixAchat < 0 ||
-      coutReparation < 0
-    ) {
+    const nomNormalise = nom.trim()
+    const durabilite = Number(durabiliteMax)
+    const prix = Number(prixAchat)
+
+    if (!nomNormalise) {
+      setError('Le nom est obligatoire.')
       return
     }
 
-    if (editingId !== null) {
-      // Modification : aucune nouvelle transaction d'achat
-      setEquipements(prev =>
-        prev.map(item =>
-          item.id === editingId
-            ? {
-                ...item,
-                nom: nom.trim(),
-                categorie: categorie.trim(),
-                durabiliteMax,
-                prixAchat,
-                coutReparation,
-                durabilite: Math.min(item.durabilite, durabiliteMax)
-              }
-            : item
-        )
-      )
-    } else {
-      const nouvelId = Date.now()
-
-      const nouvelEquipement: Equipement = {
-        id: nouvelId,
-        nom: nom.trim(),
-        categorie: categorie.trim(),
-        durabilite: durabiliteMax,
-        durabiliteMax,
-        prixAchat,
-        coutReparation,
-        statut: 'disponible'
-      }
-
-      setEquipements(prev => [...prev, nouvelEquipement])
-
-      // Une transaction négative uniquement si acheté est coché
-      if (achete) {
-        const nouvelleTransaction: Transaction = {
-          id: Date.now() + 1,
-          description: `Achat : ${nom.trim()}`,
-          montant: -prixAchat,
-          type: 'achat',
-          date: new Date().toISOString(),
-          equipementId: nouvelId
-        }
-
-        setTransactions(prev => [...prev, nouvelleTransaction])
-      }
+    if (
+      durabiliteMax.trim() === '' ||
+      !Number.isInteger(durabilite) ||
+      durabilite < 1
+    ) {
+      setError('La durabilité maximale doit être un entier supérieur à zéro.')
+      return
     }
 
-    resetForm()
-  }
+    if (
+      prixAchat.trim() === '' ||
+      !Number.isFinite(prix) ||
+      prix < 0
+    ) {
+      setError('Le prix doit être un nombre positif ou nul.')
+      return
+    }
 
-  // Préparer la modification
-  const handleEdit = (item: Equipement) => {
-    setEditingId(item.id)
-    setNom(item.nom)
-    setCategorie(item.categorie)
-    setDurabiliteMax(item.durabiliteMax)
-    setPrixAchat(item.prixAchat)
-    setCoutReparation(item.coutReparation)
-    setAchete(false)
-  }
+    try {
+      setSaving(true)
+      setError('')
 
-  // Retirer un équipement de l'inventaire
-  const handleDelete = (id: number) => {
-    const confirmation = window.confirm(
-      'Voulez-vous vraiment retirer cet équipement de l’inventaire ?'
-    )
+      await purchaseEquipement({
+        nom: nomNormalise,
+        type,
+        durabiliteMax: durabilite,
+        prixAchatBronze: prix
+      })
 
-    if (!confirmation) return
-
-    setEquipements(prev => prev.filter(item => item.id !== id))
-
-    if (editingId === id) {
       resetForm()
+      await chargerEquipements()
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'L’achat a échoué.'
+      )
+    } finally {
+      setSaving(false)
     }
-
-    // On conserve les transactions pour garder l'historique financier.
   }
 
-  // Recherche
-  const equipementsFiltres = equipements.filter(item =>
-    `${item.nom} ${item.categorie}`
-      .toLowerCase()
-      .includes(recherche.toLowerCase())
-  )
+  async function handleRepair(id: number) {
+    if (!window.confirm('Confirmer la réparation de cet équipement ?')) {
+      return
+    }
 
-  // Statistiques
-  const totalEquipements = equipements.length
+    try {
+      setError('')
+      await repairEquipement(id)
+      await chargerEquipements()
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'La réparation a échoué.'
+      )
+    }
+  }
 
-  const depensesAchats = transactions.reduce(
-    (total, transaction) => total + transaction.montant,
-    0
-  )
+  const equipementsFiltres = equipements.filter(e => {
+    const rechercheOK =
+      `${e.nom} ${e.type}`
+        .toLowerCase()
+        .includes(recherche.toLowerCase())
+
+    const statutOK =
+      filtreStatut === 'TOUS' || e.statut === filtreStatut
+
+    return rechercheOK && statutOK
+  })
+
+  const disponibles = equipements.filter(
+    e => e.statut === 'DISPONIBLE'
+  ).length
+
+  const empruntes = equipements.filter(
+    e => e.statut === 'EMPRUNTE'
+  ).length
+
+  const enReparation = equipements.filter(
+    e => e.statut === 'EN_REPARATION'
+  ).length
+
+  if (loading) {
+    return <main className="equipment-page">Chargement...</main>
+  }
 
   return (
     <main className="equipment-page">
-
-      <header className="equipment-header">
+      <header>
         <h1>Gestion des équipements</h1>
-        <p>Gérez le matériel et les ressources de votre guilde.</p>
+        <p>Inventaire des équipements de la guilde.</p>
       </header>
 
-      {/* Statistiques */}
+      {error && <p role="alert" className="error-message">{error}</p>}
+
       <section className="equipment-stats">
-
-        <div className="stat-card">
-          <h3>Équipements</h3>
-          <p>{totalEquipements}</p>
-        </div>
-
-        <div className="stat-card">
+        <article>
           <h3>Disponibles</h3>
-          <p>
-            {equipements.filter(e => e.statut === 'disponible').length}
-          </p>
-        </div>
+          <p>{disponibles}</p>
+        </article>
 
-        <div className="stat-card">
+        <article>
           <h3>Empruntés</h3>
-          <p>
-            {equipements.filter(e => e.statut === 'emprunté').length}
-          </p>
-        </div>
+          <p>{empruntes}</p>
+        </article>
 
-        <div className="stat-card">
+        <article>
           <h3>En réparation</h3>
-          <p>
-            {equipements.filter(e => e.statut === 'en réparation').length}
-          </p>
-        </div>
-
+          <p>{enReparation}</p>
+        </article>
       </section>
 
-      {/* Formulaire */}
       <section className="equipment-form-section">
+        <h2>Acheter un équipement</h2>
 
-        <h2>
-          {editingId !== null
-            ? 'Modifier un équipement'
-            : 'Ajouter un équipement'}
-        </h2>
-
-        <form onSubmit={handleSubmit} className="equipment-form">
-
+        <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="nom">Nom</label>
+            <label htmlFor="equipment-name">Nom</label>
             <input
-              id="nom"
-              type="text"
+              id="equipment-name"
               value={nom}
               onChange={e => setNom(e.target.value)}
-              placeholder="Ex : Épée en acier"
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="categorie">Catégorie</label>
-            <input
-              id="categorie"
-              type="text"
-              value={categorie}
-              onChange={e => setCategorie(e.target.value)}
-              placeholder="Ex : Arme, Armure, Potion..."
-              required
-            />
+            <label htmlFor="equipment-type">Type</label>
+            <select
+              id="equipment-type"
+              value={type}
+              onChange={e => setType(e.target.value)}
+            >
+              {TYPES_EQUIPEMENT.map(t => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
           </div>
 
           <div className="form-group">
-            <label htmlFor="durabilite">
-              Durabilité maximale (%)
+            <label htmlFor="equipment-durability">
+              Durabilité maximale
             </label>
             <input
-              id="durabilite"
+              id="equipment-durability"
               type="number"
               min="1"
-              max="100"
+              step="1"
               value={durabiliteMax}
-              onChange={e => setDurabiliteMax(Number(e.target.value))}
-              required
-            />
-            <small>
-              La durabilité actuelle sera initialisée à cette valeur.
-            </small>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="prixAchat">Prix d'achat (€)</label>
-            <input
-              id="prixAchat"
-              type="number"
-              min="0"
-              step="0.01"
-              value={prixAchat}
-              onChange={e => setPrixAchat(Number(e.target.value))}
+              onChange={e => setDurabiliteMax(e.target.value)}
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="coutReparation">
-              Coût de réparation (€)
+            <label htmlFor="equipment-price">
+              Prix d'achat (bronze)
             </label>
             <input
-              id="coutReparation"
+              id="equipment-price"
               type="number"
               min="0"
-              step="0.01"
-              value={coutReparation}
-              onChange={e => setCoutReparation(Number(e.target.value))}
+              step="any"
+              value={prixAchat}
+              onChange={e => setPrixAchat(e.target.value)}
               required
             />
           </div>
 
-          {editingId === null && (
-            <div className="form-group checkbox-group">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={achete}
-                  onChange={e => setAchete(e.target.checked)}
-                />
-                Équipement acheté
-              </label>
-              <small>
-                Crée automatiquement une transaction négative.
-              </small>
-            </div>
-          )}
-
-          <div className="equipment-form-actions">
-
-            <button type="submit">
-              {editingId !== null ? 'Enregistrer les modifications' : 'Ajouter'}
-            </button>
-
-            {editingId !== null && (
-              <button type="button" onClick={resetForm}>
-                Annuler
-              </button>
-            )}
-
-          </div>
-
+          <button type="submit" disabled={saving}>
+            {saving ? 'Achat en cours...' : 'Acheter'}
+          </button>
         </form>
       </section>
 
-      {/* Inventaire */}
       <section className="equipment-list-section">
+        <h2>Inventaire ({equipements.length})</h2>
 
-        <h2>Inventaire des équipements</h2>
+        <div className="equipment-filters">
+          <div>
+            <label htmlFor="equipment-search">
+              Rechercher un équipement
+            </label>
+            <input
+              id="equipment-search"
+              type="search"
+              value={recherche}
+              onChange={e => setRecherche(e.target.value)}
+              placeholder="Nom ou type"
+            />
+          </div>
 
-        <input
-          className="equipment-search"
-          type="search"
-          placeholder="Rechercher un équipement..."
-          value={recherche}
-          onChange={e => setRecherche(e.target.value)}
-        />
+          <div>
+            <label htmlFor="equipment-status">Filtrer par statut</label>
+            <select
+              id="equipment-status"
+              value={filtreStatut}
+              onChange={e => setFiltreStatut(e.target.value)}
+            >
+              <option value="TOUS">Tous</option>
+              <option value="DISPONIBLE">Disponibles</option>
+              <option value="EMPRUNTE">Empruntés</option>
+              <option value="EN_REPARATION">En réparation</option>
+            </select>
+          </div>
+        </div>
 
         {equipementsFiltres.length === 0 ? (
-          <p className="empty-message">
-            Aucun équipement trouvé.
-          </p>
+          <p>Aucun équipement trouvé.</p>
         ) : (
-
           <div className="equipment-table-container">
-
-            <table className="equipment-table">
-
+            <table>
               <thead>
                 <tr>
                   <th>Nom</th>
-                  <th>Catégorie</th>
+                  <th>Type</th>
                   <th>Durabilité</th>
                   <th>Prix d'achat</th>
-                  <th>Réparation</th>
                   <th>Statut</th>
                   <th>Actions</th>
                 </tr>
               </thead>
 
               <tbody>
-                {equipementsFiltres.map(item => (
-
-                  <tr key={item.id}>
-
-                    <td>{item.nom}</td>
-                    <td>{item.categorie}</td>
-
+                {equipementsFiltres.map(e => (
+                  <tr key={e.id}>
+                    <td>{e.nom}</td>
+                    <td>{e.type}</td>
                     <td>
-                      {item.durabilite} / {item.durabiliteMax}
+                      {e.durabiliteActuelle} / {e.durabiliteMax}
                     </td>
-
-                    <td>{item.prixAchat.toFixed(2)} €</td>
-                    <td>{item.coutReparation.toFixed(2)} €</td>
-
+                    <td>{e.prixAchatBronze} bronze</td>
+                    <td>{e.statut}</td>
                     <td>
-                      <span className={`status-badge ${
-                        item.statut === 'disponible'
-                          ? 'available'
-                          : item.statut === 'emprunté'
-                            ? 'borrowed'
-                            : 'repair'
-                      }`}>
-                        {item.statut}
-                      </span>
-                    </td>
-
-                    <td>
-                      <div className="equipment-actions">
-
+                      {e.statut === 'EN_REPARATION' && (
                         <button
                           type="button"
-                          className="equipment-edit-button"
-                          onClick={() => handleEdit(item)}
+                          onClick={() => handleRepair(e.id)}
                         >
-                          Modifier
+                          Réparer
                         </button>
-
-                        <button
-                          type="button"
-                          className="equipment-delete-button"
-                          onClick={() => handleDelete(item.id)}
-                        >
-                          Retirer
-                        </button>
-
-                      </div>
-                    </td>
-
-                  </tr>
-
-                ))}
-              </tbody>
-
-            </table>
-
-          </div>
-        )}
-
-      </section>
-
-      {/* Historique financier */}
-      <section className="equipment-list-section">
-
-        <h2>Historique des achats</h2>
-
-        <p>
-          Total des dépenses d'achat :{' '}
-          <strong>{depensesAchats.toFixed(2)} €</strong>
-        </p>
-
-        {transactions.length === 0 ? (
-          <p className="empty-message">
-            Aucune transaction enregistrée.
-          </p>
-        ) : (
-
-          <div className="equipment-table-container">
-
-            <table className="equipment-table">
-              <thead>
-                <tr>
-                  <th>Description</th>
-                  <th>Date</th>
-                  <th>Montant</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {transactions.map(transaction => (
-                  <tr key={transaction.id}>
-                    <td>{transaction.description}</td>
-                    <td>
-                      {new Date(transaction.date).toLocaleDateString('fr-FR')}
-                    </td>
-                    <td className="expense-amount">
-                      {transaction.montant.toFixed(2)} €
+                      )}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-
           </div>
         )}
-
       </section>
-
     </main>
   )
 }

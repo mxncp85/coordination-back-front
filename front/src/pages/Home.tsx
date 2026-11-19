@@ -1,14 +1,23 @@
-import '../App.css'
 
-function App() {
+import './Home.css'
+
+function Home() {
   return (
-    <main className="app">
-      <h1>Les Capuches d&apos;Opale</h1>
-      <p>Guilde d&apos;aventuriers — outil de gestion en construction.</p>
+    <main className="home-page">
+      <section className="home-content">
+        <h1>Les Capuches d'Opale</h1>
+
+        <p>
+          Guilde d'aventuriers — outil de gestion.
+        </p>
+
+        <p>
+          Gérez vos aventuriers et votre équipement
+          depuis votre espace de guilde.
+        </p>
+      </section>
     </main>
-    
-    
   )
 }
 
-export default App
+export default Home

@@ -1,112 +1,67 @@
 
 .members-page {
-  max-width: 1100px;
-  margin: 40px auto;
-  padding: 20px;
-  color: #252525;
-}
-
-.members-header {
-  margin-bottom: 30px;
-}
-
-.members-header h1 {
-  font-size: 2rem;
-  margin-bottom: 8px;
+  flex: 1;
+  padding: 32px;
+  max-width: 1200px;
+  width: 100%;
+  margin: auto;
 }
 
 .members-form-section,
 .members-list-section {
   background: white;
-  padding: 25px;
-  margin-bottom: 25px;
+  padding: 24px;
+  margin: 24px 0;
   border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-}
-
-.members-form-section h2,
-.members-list-section h2 {
-  margin-bottom: 20px;
-}
-
-.members-form {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  margin-bottom: 16px;
 }
 
-.form-group label {
-  font-weight: 600;
-}
-
-.form-group input,
-.search-input {
-  padding: 12px;
+.members-page input:not([type="checkbox"]) {
+  padding: 10px;
   border: 1px solid #ccc;
   border-radius: 6px;
-  font-size: 1rem;
 }
 
-.form-actions {
-  display: flex;
-  gap: 10px;
-  align-items: end;
-}
-
-.form-actions button,
-.edit-button {
-  padding: 10px 16px;
+.members-page button {
+  padding: 9px 14px;
   border: none;
   border-radius: 6px;
-  cursor: pointer;
-  background: #354b35;
+  background: #34302a;
   color: white;
 }
 
-.form-actions button:hover,
-.edit-button:hover {
-  background: #526d4e;
-}
-
-.search-input {
-  width: 100%;
-  margin-bottom: 20px;
-  box-sizing: border-box;
-}
-
 .members-table-container {
+  width: 100%;
   overflow-x: auto;
+  margin-top: 16px;
 }
 
-.members-table {
+.members-page table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.members-table th,
-.members-table td {
-  padding: 14px;
+.members-page th,
+.members-page td {
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  white-space: nowrap;
 }
 
-.members-table th {
-  background: #f4f4f4;
+.members-page fieldset {
+  margin-bottom: 16px;
 }
 
-.empty-message {
-  color: #777;
-  padding: 20px 0;
-}
-
-@media (max-width: 650px) {
-  .members-form {
-    grid-template-columns: 1fr;
-  }
+.members-page fieldset label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 12px 8px 0;
 }

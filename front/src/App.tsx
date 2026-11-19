@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 
 import Home from './pages/Home'
@@ -9,17 +10,19 @@ import './App.css'
 function App() {
   return (
     <BrowserRouter>
-      <nav className="navbar">
-        <Link to="/">Accueil</Link>
-        <Link to="/members">Aventuriers</Link>
-        <Link to="/equipment">Équipements</Link>
-      </nav>
+      <div className="app-layout">
+        <nav className="navbar" aria-label="Navigation principale">
+          <Link to="/">Accueil</Link>
+          <Link to="/members">Aventuriers</Link>
+          <Link to="/equipment">Équipements</Link>
+        </nav>
 
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/members" element={<Members />} />
-        <Route path="/equipment" element={<Equipment />} />
-      </Routes>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/members" element={<Members />} />
+          <Route path="/equipment" element={<Equipment />} />
+        </Routes>
+      </div>
     </BrowserRouter>
   )
 }

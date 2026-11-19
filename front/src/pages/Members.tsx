@@ -1,190 +1,280 @@
-
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
+
+import {
+  getAventuriers,
+  createAventurier,
+  deleteAventurier
+} from '../services/aventuriers'
+
+import { ApiError } from '../services/api'
+import type { Aventurier, Specialite } from '../types/models'
+
 import './Members.css'
 
-interface Aventurier {
-  id: number
-  nom: string
-  specialite: string
-  experience: number
-}
+const SPECIALITES: Specialite[] = [
+  'ARCHER',
+  'MAGE_ARCANIQUE'
+]
 
 function Members() {
-  const [aventuriers, setAventuriers] = useState<Aventurier[]>(() => {
-    const saved = localStorage.getItem('aventuriers')
-    return saved ? JSON.parse(saved) as Aventurier[] : []
-  })
-
+  const [aventuriers, setAventuriers] = useState<Aventurier[]>([])
   const [nom, setNom] = useState('')
-  const [specialite, setSpecialite] = useState('')
-  const [experience, setExperience] = useState<number>(0)
+  const [specialites, setSpecialites] = useState<Specialite[]>([])
+  const [experience, setExperience] = useState('')
+  const [tauxBase, setTauxBase] = useState('')
   const [recherche, setRecherche] = useState('')
-  const [editingId, setEditingId] = useState<number | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
-  // Sauvegarde locale des aventuriers
+  async function chargerAventuriers() {
+    try {
+      setError('')
+      const data = await getAventuriers()
+      setAventuriers(data)
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Impossible de charger les aventuriers.'
+      )
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
-    localStorage.setItem('aventuriers', JSON.stringify(aventuriers))
-  }, [aventuriers])
+    void chargerAventuriers()
+  }, [])
 
-  // Ajouter ou modifier un aventurier
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  function toggleSpecialite(value: Specialite) {
+    setSpecialites(previous =>
+      previous.includes(value)
+        ? previous.filter(item => item !== value)
+        : [...previous, value]
+    )
+  }
+
+  function resetForm() {
+    setNom('')
+    setSpecialites([])
+    setExperience('')
+    setTauxBase('')
+  }
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
-    if (!nom.trim() || !specialite.trim() || experience < 0) return
+    const nomNormalise = nom.trim()
+    const experienceValue = Number(experience)
+    const tauxValue = Number(tauxBase)
 
-    if (editingId !== null) {
-      setAventuriers(prev =>
-        prev.map(a =>
-          a.id === editingId
-            ? { ...a, nom, specialite, experience }
-            : a
-        )
-      )
-    } else {
-      const nouvelAventurier: Aventurier = {
-        id: Date.now(),
-        nom: nom.trim(),
-        specialite: specialite.trim(),
-        experience
-      }
-
-      setAventuriers(prev => [...prev, nouvelAventurier])
+    if (!nomNormalise) {
+      setError('Le nom est obligatoire.')
+      return
     }
 
-    resetForm()
+    if (specialites.length === 0) {
+      setError('Sélectionnez au moins une spécialité.')
+      return
+    }
+
+    if (
+      experience.trim() === '' ||
+      !Number.isInteger(experienceValue) ||
+      experienceValue < 1
+    ) {
+      setError('L’expérience doit être un entier supérieur ou égal à 1.')
+      return
+    }
+
+    if (
+      tauxBase.trim() === '' ||
+      !Number.isFinite(tauxValue) ||
+      tauxValue < 0
+    ) {
+      setError('Le taux de base doit être un nombre positif ou nul.')
+      return
+    }
+
+    try {
+      setSaving(true)
+      setError('')
+
+      await createAventurier({
+        nom: nomNormalise,
+        specialites,
+        experience: experienceValue,
+        tauxBaseBronze: tauxValue
+      })
+
+      resetForm()
+      await chargerAventuriers()
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Impossible de créer cet aventurier.'
+      )
+    } finally {
+      setSaving(false)
+    }
   }
 
-  // Préparer la modification
-  const handleEdit = (aventurier: Aventurier) => {
-    setEditingId(aventurier.id)
-    setNom(aventurier.nom)
-    setSpecialite(aventurier.specialite)
-    setExperience(aventurier.experience)
+  async function handleDelete(id: number, nomAventurier: string) {
+    if (!window.confirm(`Supprimer ${nomAventurier} ?`)) return
+
+    try {
+      setError('')
+      await deleteAventurier(id)
+
+      setAventuriers(previous =>
+        previous.filter(a => a.id !== id)
+      )
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
+        setError(
+          'Cet aventurier appartient à une équipe et ne peut pas être supprimé.'
+        )
+      } else {
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'La suppression a échoué.'
+        )
+      }
+    }
   }
 
-  // Réinitialiser le formulaire
-  const resetForm = () => {
-    setNom('')
-    setSpecialite('')
-    setExperience(0)
-    setEditingId(null)
-  }
-
-  // Rechercher par nom ou spécialité
-  const aventuriersFiltres = aventuriers.filter(a =>
-    `${a.nom} ${a.specialite}`
+  const filtres = aventuriers.filter(a =>
+    `${a.nom} ${a.specialites.join(' ')}`
       .toLowerCase()
       .includes(recherche.toLowerCase())
   )
 
+  if (loading) {
+    return <main className="members-page">Chargement...</main>
+  }
+
   return (
     <main className="members-page">
-      <header className="members-header">
+      <header>
         <h1>Gestion des aventuriers</h1>
         <p>Gérez les membres de votre guilde.</p>
       </header>
 
-      <section className="members-form-section">
-        <h2>
-          {editingId !== null
-            ? 'Modifier un aventurier'
-            : 'Ajouter un aventurier'}
-        </h2>
+      {error && <p role="alert" className="error-message">{error}</p>}
 
-        <form onSubmit={handleSubmit} className="members-form">
+      <section className="members-form-section">
+        <h2>Ajouter un aventurier</h2>
+
+        <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="nom">Nom de l'aventurier</label>
+            <label htmlFor="nom">Nom</label>
             <input
               id="nom"
-              type="text"
               value={nom}
               onChange={e => setNom(e.target.value)}
-              placeholder="Ex : Arthus"
               required
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="specialite">Spécialité</label>
-            <input
-              id="specialite"
-              type="text"
-              value={specialite}
-              onChange={e => setSpecialite(e.target.value)}
-              placeholder="Ex : Guerrier, Mage, Archer..."
-              required
-            />
-          </div>
+          <fieldset>
+            <legend>Spécialités</legend>
+
+            {SPECIALITES.map(specialite => (
+              <label key={specialite}>
+                <input
+                  type="checkbox"
+                  checked={specialites.includes(specialite)}
+                  onChange={() => toggleSpecialite(specialite)}
+                />
+                {specialite}
+              </label>
+            ))}
+          </fieldset>
 
           <div className="form-group">
-            <label htmlFor="experience">Expérience (années)</label>
+            <label htmlFor="experience">Expérience</label>
             <input
               id="experience"
               type="number"
-              min="0"
+              min="1"
+              step="1"
               value={experience}
-              onChange={e => setExperience(Number(e.target.value))}
+              onChange={e => setExperience(e.target.value)}
               required
             />
           </div>
 
-          <div className="form-actions">
-            <button type="submit">
-              {editingId !== null ? 'Enregistrer les modifications' : 'Ajouter'}
-            </button>
-
-            {editingId !== null && (
-              <button type="button" onClick={resetForm}>
-                Annuler
-              </button>
-            )}
+          <div className="form-group">
+            <label htmlFor="tauxBase">Taux de base (bronze)</label>
+            <input
+              id="tauxBase"
+              type="number"
+              min="0"
+              step="any"
+              value={tauxBase}
+              onChange={e => setTauxBase(e.target.value)}
+              required
+            />
           </div>
+
+          <button type="submit" disabled={saving}>
+            {saving ? 'Enregistrement...' : 'Ajouter'}
+          </button>
         </form>
       </section>
 
       <section className="members-list-section">
-        <h2>Liste des aventuriers ({aventuriers.length})</h2>
+        <h2>Aventuriers ({aventuriers.length})</h2>
+
+        <label htmlFor="members-search">
+          Rechercher un aventurier
+        </label>
 
         <input
-          className="search-input"
+          id="members-search"
           type="search"
-          placeholder="Rechercher par nom ou spécialité..."
           value={recherche}
           onChange={e => setRecherche(e.target.value)}
+          placeholder="Nom ou spécialité"
         />
 
-        {aventuriersFiltres.length === 0 ? (
-          <p className="empty-message">
-            {aventuriers.length === 0
-              ? 'Aucun aventurier enregistré.'
-              : 'Aucun résultat trouvé.'}
-          </p>
+        {filtres.length === 0 ? (
+          <p>Aucun résultat.</p>
         ) : (
           <div className="members-table-container">
-            <table className="members-table">
+            <table>
               <thead>
                 <tr>
                   <th>Nom</th>
-                  <th>Spécialité</th>
+                  <th>Spécialités</th>
                   <th>Expérience</th>
+                  <th>Taux de base</th>
+                  <th>Taux journalier</th>
+                  <th>Statut</th>
                   <th>Actions</th>
                 </tr>
               </thead>
 
               <tbody>
-                {aventuriersFiltres.map(aventurier => (
-                  <tr key={aventurier.id}>
-                    <td>{aventurier.nom}</td>
-                    <td>{aventurier.specialite}</td>
-                    <td>{aventurier.experience} ans</td>
+                {filtres.map(a => (
+                  <tr key={a.id}>
+                    <td>{a.nom}</td>
+                    <td>{a.specialites.join(', ')}</td>
+                    <td>{a.experience}</td>
+                    <td>{a.tauxBaseBronze} bronze</td>
+                    <td>{a.tauxJournalierBronze} bronze</td>
+                    <td>{a.statut}</td>
                     <td>
                       <button
                         type="button"
-                        className="edit-button"
-                        onClick={() => handleEdit(aventurier)}
+                        aria-label={`Supprimer ${a.nom}`}
+                        onClick={() => handleDelete(a.id, a.nom)}
                       >
-                        Modifier
+                        Supprimer
                       </button>
                     </td>
                   </tr>

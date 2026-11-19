@@ -1,242 +1,96 @@
 
 .equipment-page {
+  flex: 1;
+  width: 100%;
   max-width: 1200px;
-  margin: 40px auto;
-  padding: 20px;
-  color: #252525;
-}
-
-.equipment-header {
-  margin-bottom: 30px;
-}
-
-.equipment-header h1 {
-  font-size: 2rem;
-  margin-bottom: 8px;
+  margin: auto;
+  padding: 32px;
 }
 
 .equipment-stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
-  margin-bottom: 25px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 24px 0;
 }
 
-.stat-card {
+.equipment-stats article,
+.equipment-form-section,
+.equipment-list-section {
   background: white;
-  padding: 20px;
+  padding: 24px;
   border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
-.stat-card h3 {
-  font-size: 0.95rem;
-  color: #666;
-}
-
-.stat-card p {
+.equipment-stats article p {
   font-size: 1.8rem;
   font-weight: bold;
-  margin-top: 10px;
 }
 
 .equipment-form-section,
 .equipment-list-section {
-  background: white;
-  padding: 25px;
-  margin-bottom: 25px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
 }
 
-.equipment-form-section h2,
-.equipment-list-section h2 {
-  margin-bottom: 20px;
-}
-
-.equipment-form {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-}
-
-.form-group {
+.equipment-page .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  margin-bottom: 16px;
 }
 
-.form-group label {
-  font-weight: 600;
-}
-
-.form-group input,
-.form-group select,
-.equipment-search {
-  padding: 12px;
+.equipment-page input,
+.equipment-page select {
+  padding: 10px;
   border: 1px solid #ccc;
   border-radius: 6px;
-  font-size: 1rem;
 }
 
-.equipment-form-actions {
-  display: flex;
-  gap: 10px;
-  align-items: end;
-}
-
-.equipment-form-actions button,
-.equipment-edit-button {
-  padding: 10px 16px;
+.equipment-page button {
+  padding: 9px 14px;
   border: none;
   border-radius: 6px;
-  cursor: pointer;
-  background: #354b35;
+  background: #34302a;
   color: white;
 }
 
-.equipment-form-actions button:hover,
-.equipment-edit-button:hover {
-  background: #526d4e;
-}
-
-.equipment-list-header {
+.equipment-filters {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  gap: 20px;
   flex-wrap: wrap;
-  gap: 10px;
+  margin: 20px 0;
 }
 
-.equipment-list-header p {
-  font-weight: 600;
-}
-
-.equipment-search {
-  width: 100%;
-  box-sizing: border-box;
-  margin-bottom: 20px;
+.equipment-filters > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .equipment-table-container {
+  width: 100%;
   overflow-x: auto;
 }
 
-.equipment-table {
+.equipment-page table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.equipment-table th,
-.equipment-table td {
-  padding: 14px;
+.equipment-page th,
+.equipment-page td {
+  padding: 12px;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #ddd;
+  white-space: nowrap;
 }
 
-.equipment-table th {
-  background: #f4f4f4;
-}
-
-.status-badge {
-  padding: 6px 10px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.available {
-  background: #d9f5df;
-  color: #216b35;
-}
-
-.borrowed {
-  background: #fff0c2;
-  color: #856404;
-}
-
-.repair {
-  background: #f8d7da;
-  color: #842029;
-}
-
-.empty-message {
-  color: #777;
-  padding: 20px 0;
-}
-
-@media (max-width: 800px) {
+@media (max-width: 700px) {
   .equipment-stats {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 600px) {
-  .equipment-form {
     grid-template-columns: 1fr;
   }
 
-  .equipment-stats {
-    grid-template-columns: 1fr 1fr;
+  .equipment-page {
+    padding: 16px;
   }
 }
-
-
-/* Case acheté */
-.checkbox-group {
-  justify-content: center;
-  align-items: flex-start;
-}
-
-.checkbox-group label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-}
-
-.checkbox-group input {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-}
-
-.checkbox-group small,
-.form-group small {
-  color: #777;
-  font-size: 0.8rem;
-}
-
-/* Actions */
-.equipment-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.equipment-delete-button {
-  padding: 10px 16px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  background: #a83232;
-  color: white;
-}
-
-.equipment-delete-button:hover {
-  background: #812424;
-}
-
-/* Historique financier */
-.expense-amount {
-  color: #c0392b;
-  font-weight: bold;
-}
-
-/* Responsive */
-@media (max-width: 650px) {
-  .equipment-actions {
-    flex-direction: column;
-  }
-}
-
