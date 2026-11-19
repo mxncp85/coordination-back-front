@@ -3,6 +3,8 @@ export interface TeamMember {
   name: string;
   /** Tarif journalier actuel (J_actuel), en pièces d'or. */
   dailyRate: number;
+  /** Expérience réelle du membre (Exp_r). */
+  experience: number;
 }
 
 /** Seuil au-delà duquel la mission n'est pas rentable (ratio en %). */
