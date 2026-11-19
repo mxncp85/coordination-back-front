@@ -3,14 +3,7 @@ package fr.capuches.dopale.requete;
 import java.time.LocalDate;
 
 import fr.capuches.dopale.api.model.StatutRequete;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -18,6 +11,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "requete")
@@ -63,6 +58,10 @@ public class RequeteEntity {
 
     private LocalDate dateCloture;
 
+    @ElementCollection
+    @CollectionTable(name = "equipe_equipement", joinColumns = @JoinColumn(name = "requete_id"))
+    @Column(name = "equipement_id")
+    private Set<Long> equipementIds = new LinkedHashSet<>();
     public boolean estActive() {
         return statut == StatutRequete.EQUIPE_VALIDEE || statut == StatutRequete.EN_COURS;
     }

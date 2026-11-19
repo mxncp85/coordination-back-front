@@ -10,9 +10,15 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "equipement")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class EquipementEntity {
 
 	@Id
@@ -31,9 +37,6 @@ public class EquipementEntity {
 	@Version
 	private long version;
 
-	protected EquipementEntity() {
-	}
-
 	public EquipementEntity(String nom, String type, int durabiliteMax, long prixAchatBronze) {
 		this.nom = nom;
 		this.type = type;
@@ -42,7 +45,6 @@ public class EquipementEntity {
 		this.prixAchatBronze = prixAchatBronze;
 		this.statut = StatutEquipement.DISPONIBLE;
 	}
-
 	public void emprunter() {
 		if (statut != StatutEquipement.DISPONIBLE) {
 			throw new ConflitMetierException("Equipement " + id + " non disponible (" + statut + ")");
@@ -58,31 +60,4 @@ public class EquipementEntity {
 		statut = StatutEquipement.DISPONIBLE;
 	}
 
-	public Long getId() {
-		return id;
-	}
-
-	public String getNom() {
-		return nom;
-	}
-
-	public String getType() {
-		return type;
-	}
-
-	public int getDurabiliteMax() {
-		return durabiliteMax;
-	}
-
-	public int getDurabiliteActuelle() {
-		return durabiliteActuelle;
-	}
-
-	public long getPrixAchatBronze() {
-		return prixAchatBronze;
-	}
-
-	public StatutEquipement getStatut() {
-		return statut;
-	}
 }
