@@ -11,22 +11,30 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import fr.capuches.dopale.api.model.StatutEquipement;
+import fr.capuches.dopale.api.model.TypeTransaction;
 import fr.capuches.dopale.commun.exception.ConflitMetierException;
 import fr.capuches.dopale.commun.exception.RessourceIntrouvableException;
+import fr.capuches.dopale.compte.CompteService;
+import fr.capuches.dopale.compte.TransactionEntity;
 
 @ExtendWith(MockitoExtension.class)
 class EquipementServiceTest {
 
 	@Mock
 	private EquipementRepository equipementRepository;
+
+	@Mock
+	private CompteService compteService;
 
 	@InjectMocks
 	private EquipementService equipementService;
@@ -42,6 +50,31 @@ class EquipementServiceTest {
 		assertThat(equipement.getDurabiliteActuelle()).isEqualTo(30);
 		assertThat(equipement.getStatut()).isEqualTo(StatutEquipement.DISPONIBLE);
 		verify(equipementRepository).save(equipement);
+	}
+
+	@Test
+	void acheter_50PO_debite5000Bronze() {
+		EquipementEntity epee = new EquipementEntity("Épée longue", "arme", 30, 5000);
+		ReflectionTestUtils.setField(epee, "id", 7L);
+		when(equipementRepository.save(any())).thenReturn(epee);
+
+		equipementService.acheter("Épée longue", "arme", 30, 5000);
+
+		ArgumentCaptor<TransactionEntity> captor = ArgumentCaptor.forClass(TransactionEntity.class);
+		verify(compteService).enregistrer(captor.capture());
+		TransactionEntity debit = captor.getValue();
+		assertThat(debit.getMontantBronze()).isEqualTo(-5000);
+		assertThat(debit.getType()).isEqualTo(TypeTransaction.ACHAT);
+		assertThat(debit.getEquipementId()).isEqualTo(7L);
+	}
+
+	@Test
+	void acheter_gratuit_neCreePasDeTransaction() {
+		when(equipementRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+		equipementService.acheter("Bouclier trouvé", "armure", 20, 0);
+
+		verify(compteService, never()).enregistrer(any());
 	}
 
 	@Test
