@@ -33,4 +33,8 @@ public interface EquipeMembreRepository extends JpaRepository<EquipeMembreEntity
                                fr.capuches.dopale.api.model.StatutRequete.EN_COURS)
 			""")
 	List<EquipeMembreEntity> findEquipesActives(@Param("aventurierId") Long aventurierId);
+
+	List<EquipeMembreEntity> findByRequeteId(Long requeteId);
+
 }
+
