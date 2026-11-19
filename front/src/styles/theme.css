@@ -1,0 +1,26 @@
+:root {
+  font-family: Inter, "Segoe UI", sans-serif;
+  color: #eee9df;
+  background: #171923;
+
+  --color-bg: #171923;
+  --color-surface: #202431;
+  --color-surface-raised: #282e3d;
+  --color-border: #3b4050;
+
+  --color-gold: #c5a15b;
+  --color-gold-hover: #d8b875;
+  --color-text: #eee9df;
+  --color-muted: #a6a8b1;
+
+  --color-success: #78a989;
+  --color-danger: #c87979;
+  --color-warning: #d5ad68;
+  --color-info: #82a8c9;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  --shadow-card: 0 8px 24px rgb(0 0 0 / 18%);
+}

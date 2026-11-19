@@ -1,6 +1,15 @@
 export type Specialite =
   | 'ARCHER'
+  | 'BARBARE'
+  | 'PALADIN'
   | 'MAGE_ARCANIQUE'
+  | 'PRETRE'
+  | 'GEOMANCIEN'
+  | 'ALCHIMISTE'
+  | 'FORGERON'
+  | 'ENCHANTEUR'
+  | 'MESSAGER'
+  | 'AUTRE'
 
 export type StatutAventurier =
   | 'DISPONIBLE'
