@@ -387,6 +387,27 @@ paths:
         '400': { $ref: '#/components/responses/Erreur' }
         '401': { $ref: '#/components/responses/Erreur' }
 
+  /api/aventuriers/disponibilite:
+    get:
+      tags: [Aventuriers]
+      summary: Disponibilité sur une période
+      description: |
+        Indique qui est libre sur [from, to] (jours entiers, inclusifs).
+        Un aventurier est indisponible s'il a une mission (équipe validée ou en cours)
+        ou un repos (US-21) qui chevauche la période.
+      operationId: listDisponibilites
+      parameters:
+        - { name: from, in: query, required: true, schema: { type: string, format: date } }
+        - { name: to, in: query, required: true, schema: { type: string, format: date } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DisponibilitePeriode' }
+        '400': { $ref: '#/components/responses/Erreur' }
+        '401': { $ref: '#/components/responses/Erreur' }
+
   /api/aventuriers/{id}:
     parameters:
       - $ref: '#/components/parameters/id'
@@ -429,6 +450,30 @@ paths:
         '204': { description: Supprimé }
         '404': { $ref: '#/components/responses/Erreur' }
         '409': { $ref: '#/components/responses/Erreur' }
+        '401': { $ref: '#/components/responses/Erreur' }
+
+  /api/aventuriers/{id}/emploi-du-temps:
+    parameters:
+      - $ref: '#/components/parameters/id'
+    get:
+      tags: [Aventuriers]
+      summary: Emploi du temps (missions et repos)
+      description: |
+        Statut courant (disponible / en mission jusqu'au… / au repos jusqu'au…),
+        missions prévues ou en cours, périodes de repos (US-21) et vue calendrier
+        sur [from, to] si fourni.
+      operationId: getEmploiDuTemps
+      parameters:
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EmploiDuTemps' }
+        '400': { $ref: '#/components/responses/Erreur' }
+        '404': { $ref: '#/components/responses/Erreur' }
         '401': { $ref: '#/components/responses/Erreur' }
 
   # ---------- Inventaire ----------
@@ -791,10 +836,74 @@ components:
               readOnly: true
               description: J_base × (1 + 0,5 × ln(Exp_r)), arrondi au bronze
             statut:
-              type: string
-              enum: [DISPONIBLE, EN_MISSION, EN_REPOS]
+              allOf:
+                - $ref: '#/components/schemas/StatutAventurier'
               readOnly: true
             disponibleLe: { type: string, format: date, nullable: true, readOnly: true }
+
+    StatutAventurier:
+      type: string
+      enum: [DISPONIBLE, EN_MISSION, EN_REPOS]
+
+    TypeOccupation:
+      type: string
+      enum: [MISSION, REPOS]
+
+    PhaseMission:
+      type: string
+      enum: [PREVUE, EN_COURS, TERMINEE]
+
+    OccupationCalendrier:
+      type: object
+      required: [type, debut, fin]
+      properties:
+        type: { $ref: '#/components/schemas/TypeOccupation' }
+        id: { type: integer, format: int64, description: "ID requête (mission) ou omis pour un repos courant" }
+        libelle: { type: string }
+        debut: { type: string, format: date }
+        fin: { type: string, format: date }
+        phaseMission: { $ref: '#/components/schemas/PhaseMission', nullable: true }
+
+    EmploiDuTemps:
+      type: object
+      required: [aventurierId, nom, statut, missions, repos, calendrier]
+      properties:
+        aventurierId: { type: integer, format: int64 }
+        nom: { type: string }
+        statut: { $ref: '#/components/schemas/StatutAventurier' }
+        disponibleLe: { type: string, format: date, nullable: true }
+        missions:
+          type: array
+          items: { $ref: '#/components/schemas/OccupationCalendrier' }
+        repos:
+          type: array
+          items: { $ref: '#/components/schemas/OccupationCalendrier' }
+        calendrier:
+          type: array
+          items: { $ref: '#/components/schemas/OccupationCalendrier' }
+
+    AventurierDisponibilite:
+      type: object
+      required: [id, nom, disponible, statut]
+      properties:
+        id: { type: integer, format: int64 }
+        nom: { type: string }
+        disponible: { type: boolean }
+        statut: { $ref: '#/components/schemas/StatutAventurier' }
+        disponibleLe: { type: string, format: date, nullable: true }
+        conflits:
+          type: array
+          items: { $ref: '#/components/schemas/OccupationCalendrier' }
+
+    DisponibilitePeriode:
+      type: object
+      required: [from, to, aventuriers]
+      properties:
+        from: { type: string, format: date }
+        to: { type: string, format: date }
+        aventuriers:
+          type: array
+          items: { $ref: '#/components/schemas/AventurierDisponibilite' }
 
     Equipe:
       type: object

@@ -66,6 +66,15 @@ Sous Windows : `.\mvnw.cmd spring-boot:run`
 
 Endpoint de santé : [http://localhost:8080/api/health](http://localhost:8080/api/health)
 
+### Emploi du temps & repos (US-21)
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| `GET` | `/api/aventuriers/{id}` | Fiche avec `statut` (`DISPONIBLE` / `EN_MISSION` / `EN_REPOS`) et `disponibleLe` |
+| `GET` | `/api/aventuriers/{id}/emploi-du-temps?from=&to=` | Missions, repos et calendrier |
+| `GET` | `/api/aventuriers/disponibilite?from=&to=` | Qui est libre sur la période (aucun chevauchement mission/repos) |
+| `GET` | `/api/aventuriers?disponible=true` | Filtre liste sur le statut courant |
+
 Compile uniquement : `./mvnw -DskipTests compile`
 
 ### Code généré depuis le contrat d'API
