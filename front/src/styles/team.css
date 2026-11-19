@@ -1,0 +1,120 @@
+.team-page {
+  display: grid;
+  gap: 1.25rem;
+  width: min(100%, 44rem);
+  margin-inline: auto;
+  text-align: left;
+}
+
+.team-card,
+.profitability {
+  padding: 1.25rem 1.5rem;
+  border: 1px solid rgba(232, 224, 208, 0.2);
+  border-radius: 0.75rem;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.team-card__title,
+.profitability__title {
+  margin: 0 0 1rem;
+}
+
+.team-card__empty {
+  opacity: 0.7;
+}
+
+.team-form__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-block: 0.75rem;
+}
+
+.team-form__field {
+  display: grid;
+  gap: 0.25rem;
+  flex: 1 1 10rem;
+  font-size: 0.9rem;
+}
+
+.team-form__field input {
+  padding: 0.4rem 0.5rem;
+  font: inherit;
+}
+
+.team-form__btn,
+.team-list__remove {
+  padding: 0.45rem 0.9rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.team-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.team-list__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding-block: 0.5rem;
+  border-bottom: 1px solid rgba(232, 224, 208, 0.12);
+}
+
+.team-list__item > span:first-child {
+  flex: 1;
+}
+
+.team-list__rate {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+.profitability__figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.profitability__figures dt {
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+.profitability__figures dd {
+  margin: 0.25rem 0 0;
+  font-size: 1.3rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.profitability__ratio {
+  font-weight: 700;
+}
+
+.profitability__note {
+  margin-top: 1rem;
+  opacity: 0.75;
+}
+
+.profitability--alert {
+  border-color: #e0604a;
+  background: rgba(224, 96, 74, 0.12);
+}
+
+.profitability--alert .profitability__ratio {
+  color: #ff8a73;
+}
+
+.profitability__warning {
+  margin: 1rem 0 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.5rem;
+  background: #a8321f;
+  color: #fff;
+  font-weight: 700;
+}
