@@ -5,16 +5,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import fr.capuches.dopale.api.model.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import fr.capuches.dopale.api.model.AventurierDisponibilite;
-import fr.capuches.dopale.api.model.DisponibilitePeriode;
-import fr.capuches.dopale.api.model.EmploiDuTemps;
-import fr.capuches.dopale.api.model.OccupationCalendrier;
-import fr.capuches.dopale.api.model.PhaseMission;
-import fr.capuches.dopale.api.model.StatutAventurier;
-import fr.capuches.dopale.api.model.TypeOccupation;
 import fr.capuches.dopale.commun.exception.RessourceIntrouvableException;
 import fr.capuches.dopale.commun.exception.ValidationMetierException;
 import fr.capuches.dopale.requete.EquipeMembreEntity;
@@ -123,8 +117,7 @@ public class DisponibiliteService {
 	private List<OccupationCalendrier> missions(Long aventurierId, LocalDate aujourdHui) {
 		return equipeMembreRepository.findOccupationsByAventurierId(aventurierId).stream()
 				.map(EquipeMembreEntity::getRequete)
-				.filter(r -> r.estActive() || "REUSSIE".equals(r.getStatut()) || "ECHOUEE".equals(r.getStatut()))
-				.map(r -> versMission(r, aujourdHui))
+				.filter(r -> r.estActive() || r.getStatut() == StatutRequete.REUSSIE || r.getStatut() == StatutRequete.ECHOUEE)				.map(r -> versMission(r, aujourdHui))
 				.toList();
 	}
 
@@ -156,11 +149,11 @@ public class DisponibiliteService {
 	}
 
 	private PhaseMission phaseMission(RequeteEntity requete, LocalDate aujourdHui, LocalDate debut, LocalDate fin) {
-		if ("EN_COURS".equals(requete.getStatut()) || (debut != null && fin != null && new Periode(debut, fin).contient(aujourdHui)
+		if (requete.getStatut() == StatutRequete.EN_COURS || (debut != null && fin != null && new Periode(debut, fin).contient(aujourdHui)
 				&& requete.estActive())) {
 			return PhaseMission.EN_COURS;
 		}
-		if ("EQUIPE_VALIDEE".equals(requete.getStatut()) || (debut != null && aujourdHui.isBefore(debut))) {
+		if (requete.getStatut() == StatutRequete.EQUIPE_VALIDEE || (debut != null && aujourdHui.isBefore(debut))) {
 			return PhaseMission.PREVUE;
 		}
 		return PhaseMission.TERMINEE;
