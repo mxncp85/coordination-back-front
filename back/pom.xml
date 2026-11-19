@@ -62,9 +62,31 @@
 	</dependencies>
 	<build>
 		<plugins>
+			<!-- Lombok doit être déclaré explicitement : depuis le JDK 23, javac ne lance plus les processeurs d'annotations du classpath -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>${lombok.version}</version>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
 			</plugin>
 			<!-- Génère les interfaces des contrôleurs et les DTO à partir du contrat d'API (target/generated-sources, jamais commité) -->
 			<plugin>

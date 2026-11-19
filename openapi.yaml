@@ -25,6 +25,7 @@ tags:
   - name: Equipements
   - name: Consommables
   - name: Comptes
+  - name: Previsions
 
 paths:
   /api/health:
@@ -644,9 +645,13 @@ paths:
     get:
       tags: [Comptes]
       summary: Historique (du plus récent au plus ancien)
+      description: Filtres optionnels et cumulables. from et to sont inclusifs ; from doit être inférieur ou égal à to, sinon 400.
       operationId: listTransactions
       parameters:
         - { name: type, in: query, schema: { $ref: '#/components/schemas/TypeTransaction' } }
+        - { name: from, in: query, description: Transactions à partir de ce jour inclus, schema: { type: string, format: date } }
+        - { name: to, in: query, description: Transactions jusqu'à ce jour inclus, schema: { type: string, format: date } }
+        - { name: requeteId, in: query, description: Transactions liées à cette requête, schema: { type: integer, format: int64, minimum: 1 } }
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/size'
       responses:
@@ -663,6 +668,7 @@ paths:
                       content:
                         type: array
                         items: { $ref: '#/components/schemas/Transaction' }
+        '400': { $ref: '#/components/responses/Erreur' }
         '401': { $ref: '#/components/responses/Erreur' }
     post:
       tags: [Comptes]
@@ -692,7 +698,7 @@ paths:
 
   /api/comptes/previsions:
     get:
-      tags: [Comptes]
+      tags: [Previsions]
       summary: Prévisions du solde (3 scénarios)
       operationId: getPrevisions
       responses:
@@ -975,6 +981,8 @@ components:
         libelle: { type: string }
         type: { $ref: '#/components/schemas/TypeTransaction' }
         requeteId: { type: integer, format: int64, nullable: true }
+        aventurierId: { type: integer, format: int64, nullable: true, description: Aventurier payé (PAIEMENT_AVENTURIER) }
+        equipementId: { type: integer, format: int64, nullable: true, description: Équipement acheté (ACHAT) }
 
     SerieSolde:
       type: array
