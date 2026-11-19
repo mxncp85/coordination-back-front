@@ -70,13 +70,24 @@ public class AventurierService {
 		return mapper.versDto(sauve, disponibiliteService.calculerStatut(sauve, LocalDate.now()));
 	}
 
+	/**
+	 * Archive (soft-delete) : disparaît des listes actives, conserve l'historique des missions.
+	 * 409 s'il est dans une équipe réservée ({@code EQUIPE_VALIDEE}) ou en mission ({@code EN_COURS}).
+	 */
 	@Transactional
-	public void delete(Long id) {
+	public void archive(Long id) {
 		AventurierEntity entity = require(id);
 		if (equipeMembreRepository.estDansEquipeActive(id)) {
-			throw new ConflitMetierException("L'aventurier " + id + " est réservé ou en mission");
+			throw new ConflitMetierException(
+					"Impossible d'archiver l'aventurier " + id + " : il est réservé ou en mission");
 		}
 		entity.setSupprimeLe(Instant.now());
+	}
+
+	/** Alias OpenAPI {@code deleteAventurier} → archive métier. */
+	@Transactional
+	public void delete(Long id) {
+		archive(id);
 	}
 
 	@Transactional(readOnly = true)
