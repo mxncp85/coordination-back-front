@@ -18,8 +18,8 @@ security:
   - bearerAuth: []
 
 tags:
-  - name: Requêtes
-  - name: Équipes
+  - name: Requetes
+  - name: Equipes
   - name: Missions
   - name: Aventuriers
   - name: Inventaire
@@ -90,7 +90,7 @@ paths:
   # ---------- Requêtes ----------
   /api/requetes:
     get:
-      tags: [Requêtes]
+      tags: [Requetes]
       summary: Liste des requêtes
       operationId: listRequetes
       parameters:
@@ -120,7 +120,7 @@ paths:
                         items: { $ref: '#/components/schemas/Requete' }
         '401': { $ref: '#/components/responses/Erreur' }
     post:
-      tags: [Requêtes]
+      tags: [Requetes]
       summary: Créer une requête (statut NOUVELLE)
       operationId: createRequete
       requestBody:
@@ -141,7 +141,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/id'
     get:
-      tags: [Requêtes]
+      tags: [Requetes]
       summary: Détail d'une requête
       operationId: getRequete
       responses:
@@ -153,7 +153,7 @@ paths:
         '404': { $ref: '#/components/responses/Erreur' }
         '401': { $ref: '#/components/responses/Erreur' }
     put:
-      tags: [Requêtes]
+      tags: [Requetes]
       summary: Modifier une requête
       description: Seulement en NOUVELLE ou EQUIPE_VALIDEE, sinon 409.
       operationId: updateRequete
@@ -178,7 +178,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/id'
     get:
-      tags: [Équipes]
+      tags: [Equipes]
       summary: Équipe courante (Tq, coût, ratio)
       operationId: getEquipe
       responses:
@@ -190,7 +190,7 @@ paths:
         '404': { $ref: '#/components/responses/Erreur' }
         '401': { $ref: '#/components/responses/Erreur' }
     put:
-      tags: [Équipes]
+      tags: [Equipes]
       summary: Composer l'équipe (brouillon)
       description: Remplace la composition. Les IDs doivent être uniques. 409 si un aventurier n'est pas disponible sur la durée de la quête.
       operationId: setEquipe
@@ -223,7 +223,7 @@ paths:
 
   /api/requetes/{id}/equipe/validation:
     post:
-      tags: [Équipes]
+      tags: [Equipes]
       summary: Valider l'équipe
       description: Passe la requête en EQUIPE_VALIDEE et réserve aventuriers et équipements (tout ou rien). Une requête expirée ne peut pas être acceptée.
       operationId: validerEquipe
@@ -241,7 +241,7 @@ paths:
 
   /api/requetes/{id}/equipe/suggestion:
     post:
-      tags: [Équipes]
+      tags: [Equipes]
       summary: Suggérer une équipe (sprint 2)
       description: Calcule une proposition sans l'enregistrer. 422 si aucune équipe complète n'est possible.
       operationId: suggererEquipe
@@ -307,7 +307,7 @@ paths:
                 type: object
                 properties:
                   requete: { $ref: '#/components/schemas/Requete' }
-                  soldeEncaisseBronze: { type: integer, format: int64, description: 80 % de la prime, 0 si échec }
+                  soldeEncaisseBronze: { type: integer, format: int64, description: "80 % de la prime, 0 si échec" }
                   xpAttribuee: { type: integer }
                   paiements:
                     type: array
@@ -751,7 +751,7 @@ components:
         datePeremption: { type: string, format: date, description: "Doit être aujourd'hui ou ultérieure à la création. Une fois cette date passée, la requête ne peut plus être acceptée et passe à REJETEE si son équipe n'a pas été validée." }
         primeBronze: { type: integer, format: int64, minimum: 1 }
         commanditaire: { type: string, minLength: 1 }
-        expRecommandee: { type: integer, minimum: 0, default: 0, description: Exp_rec, utilisée pour Tq et le repos }
+        expRecommandee: { type: integer, minimum: 0, default: 0, description: "Exp_rec, utilisée pour Tq et le repos" }
         xpGagnee: { type: integer, minimum: 0, default: 0, description: XP par membre en cas de succès }
 
     Requete:
@@ -813,7 +813,7 @@ components:
         equipementIds:
           type: array
           items: { type: integer, format: int64 }
-        chanceReussite: { type: number, nullable: true, description: Tq entre 0 et 1, null si équipe vide }
+        chanceReussite: { type: number, nullable: true, description: "Tq entre 0 et 1, null si équipe vide" }
         coutBronze: { type: integer, format: int64, description: somme de J_actuel × durée }
         ratioCoutPrime: { type: number, nullable: true }
         complete: { type: boolean, description: "Indique si l'assistant considère l'équipe composée comme adaptée à la requête, en fonction des profils et disponibilités des aventuriers." }
@@ -861,7 +861,7 @@ components:
       properties:
         id: { type: integer, format: int64 }
         date: { type: string, format: date-time }
-        montantBronze: { type: integer, format: int64, description: positif = crédit, négatif = débit }
+        montantBronze: { type: integer, format: int64, description: "positif = crédit, négatif = débit" }
         libelle: { type: string }
         type: { $ref: '#/components/schemas/TypeTransaction' }
         requeteId: { type: integer, format: int64, nullable: true }

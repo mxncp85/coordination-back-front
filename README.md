@@ -6,12 +6,46 @@ Monorepo de gestion de guilde d'aventuriers (coordination front & back — Ynov 
 
 ```
 coordination-back-front/
-├── front/   # React + Vite + TypeScript
-├── back/    # Spring Boot (Java 21)
+├── front/              # React + Vite + TypeScript
+├── back/               # Spring Boot (Java 21)
+├── docker-compose.yml  # Lancement unique
 └── .github/workflows/ci.yml
 ```
 
-## Front (`front/`)
+## Démarrer avec Docker (recommandé)
+
+Prérequis : [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+
+```bash
+docker compose up --build
+```
+
+| Service | URL |
+|---------|-----|
+| Front (Vite) | [http://localhost:5173](http://localhost:5173) |
+| Back (API) | [http://localhost:8080](http://localhost:8080) |
+| Health | [http://localhost:8080/api/health](http://localhost:8080/api/health) |
+
+Les appels front vers `/api/*` sont proxifiés vers le back dans Docker.
+
+### Hot reload
+
+- **Front** : rechargement automatique (Vite HMR) dès que tu modifies le code dans `front/`.
+- **Back** : recompilation + redémarrage auto (DevTools) dès que tu modifies le code dans `back/src`.
+
+### Tout recompiler / relancer
+
+```bash
+docker compose up --build --force-recreate
+```
+
+Arrêt :
+
+```bash
+docker compose down
+```
+
+## Front (`front/`) — sans Docker
 
 ```bash
 cd front
@@ -21,7 +55,7 @@ npm run dev
 
 Build de production : `npm run build`
 
-## Back (`back/`)
+## Back (`back/`) — sans Docker
 
 ```bash
 cd back
@@ -33,6 +67,27 @@ Sous Windows : `.\mvnw.cmd spring-boot:run`
 Endpoint de santé : [http://localhost:8080/api/health](http://localhost:8080/api/health)
 
 Compile uniquement : `./mvnw -DskipTests compile`
+
+### Code généré depuis le contrat d'API
+
+Les interfaces des contrôleurs et les DTO sont **générés** à partir de [`openapi.yaml`](openapi.yaml) à chaque build (`openapi-generator-maven-plugin`), dans `back/target/generated-sources/openapi`. Ce code n'est jamais commité ni modifié à la main.
+
+- Interfaces : `fr.capuches.dopale.api` (`RequetesApi`, `AventuriersApi`, `InventaireApi`, `ComptesApi`…), une par tag du contrat
+- DTO : `fr.capuches.dopale.api.model` (`Requete`, `RequeteInput`, `Erreur`…)
+
+Un contrôleur implémente simplement l'interface générée :
+
+```java
+@RestController
+class RequeteController implements RequetesApi {
+    @Override
+    public ResponseEntity<Requete> createRequete(RequeteInput requeteInput) { ... }
+}
+```
+
+Après une modification du contrat, relancer `./mvnw -DskipTests compile` (dans IntelliJ : Maven → *Generate Sources and Update Folders*). Les tags du contrat doivent rester sans accents, car ils deviennent des noms de classes Java.
+
+Organisation du back : un package par fonctionnalité (`requete/`, `aventurier/`, `inventaire/`, `compte/`…). Les erreurs se lèvent avec les exceptions de `commun/exception` (`RessourceIntrouvableException` → 404, `ConflitMetierException` → 409, `ValidationMetierException` → 400) et sont converties au format `Erreur` du contrat ; les listes paginées passent par `commun/pagination/PaginationUtils`.
 
 ## CI
 
