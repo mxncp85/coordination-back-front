@@ -24,6 +24,7 @@ services:
       - ./back/src:/app/src
       - ./back/pom.xml:/app/pom.xml
       - back_m2:/root/.m2
+      - ./openapi.yaml:/openapi.yaml:ro
     environment:
       SPRING_DEVTOOLS_RESTART_ENABLED: "true"
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
