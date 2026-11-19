@@ -1,17 +1,13 @@
 package fr.capuches.dopale;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 
-/**
- * Smoke test sans PostgreSQL. Les tests d'intégration JPA/Flyway nécessitent la base
- * (Docker Compose service {@code db}).
- */
+@SpringBootTest
 class CapuchesDopaleApplicationTests {
 
 	@Test
-	void applicationClassIsPresent() {
-		assertNotNull(CapuchesDopaleApplication.class);
+	void contextLoads() {
 	}
+
 }
