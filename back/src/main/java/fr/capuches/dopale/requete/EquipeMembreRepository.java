@@ -20,7 +20,8 @@ public interface EquipeMembreRepository extends JpaRepository<EquipeMembreEntity
 			select count(em) > 0 from EquipeMembreEntity em
 			join em.requete r
 			where em.aventurierId = :aventurierId
-			  and r.statut in ('EQUIPE_VALIDEE', 'EN_COURS')
+			  and r.statut in (fr.capuches.dopale.api.model.StatutRequete.EQUIPE_VALIDEE,
+                               fr.capuches.dopale.api.model.StatutRequete.EN_COURS)
 			""")
 	boolean estDansEquipeActive(@Param("aventurierId") Long aventurierId);
 
@@ -28,7 +29,8 @@ public interface EquipeMembreRepository extends JpaRepository<EquipeMembreEntity
 			select em from EquipeMembreEntity em
 			join fetch em.requete r
 			where em.aventurierId = :aventurierId
-			  and r.statut in ('EQUIPE_VALIDEE', 'EN_COURS')
+			  and r.statut in (fr.capuches.dopale.api.model.StatutRequete.EQUIPE_VALIDEE,
+                               fr.capuches.dopale.api.model.StatutRequete.EN_COURS)
 			""")
 	List<EquipeMembreEntity> findEquipesActives(@Param("aventurierId") Long aventurierId);
 }

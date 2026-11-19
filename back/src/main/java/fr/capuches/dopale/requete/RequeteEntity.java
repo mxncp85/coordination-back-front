@@ -64,7 +64,7 @@ public class RequeteEntity {
     private LocalDate dateCloture;
 
     public boolean estActive() {
-        return "EQUIPE_VALIDEE".equals(statut) || "EN_COURS".equals(statut);
+        return statut == StatutRequete.EQUIPE_VALIDEE || statut == StatutRequete.EN_COURS;
     }
 }
 
