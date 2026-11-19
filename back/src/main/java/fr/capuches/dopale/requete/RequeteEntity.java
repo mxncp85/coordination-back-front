@@ -2,9 +2,9 @@ package fr.capuches.dopale.requete;
 
 import java.time.LocalDate;
 
+import fr.capuches.dopale.api.model.StatutRequete;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import fr.capuches.dopale.api.model.StatutRequete;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -62,5 +62,9 @@ public class RequeteEntity {
     private LocalDate dateDepart;
 
     private LocalDate dateCloture;
+
+    public boolean estActive() {
+        return "EQUIPE_VALIDEE".equals(statut) || "EN_COURS".equals(statut);
+    }
 }
 
