@@ -72,7 +72,7 @@ Compile uniquement : `./mvnw -DskipTests compile`
 
 Les interfaces des contrôleurs et les DTO sont **générés** à partir de [`openapi.yaml`](openapi.yaml) à chaque build (`openapi-generator-maven-plugin`), dans `back/target/generated-sources/openapi`. Ce code n'est jamais commité ni modifié à la main.
 
-- Interfaces : `fr.capuches.dopale.api` (`RequetesApi`, `AventuriersApi`, `InventaireApi`, `ComptesApi`…), une par tag du contrat
+- Interfaces : `fr.capuches.dopale.api` (`RequetesApi`, `AventuriersApi`, `EquipementsApi`, `ConsommablesApi`, `ComptesApi`…), une par tag du contrat
 - DTO : `fr.capuches.dopale.api.model` (`Requete`, `RequeteInput`, `Erreur`…)
 
 Un contrôleur implémente simplement l'interface générée :

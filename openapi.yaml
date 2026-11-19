@@ -22,7 +22,8 @@ tags:
   - name: Equipes
   - name: Missions
   - name: Aventuriers
-  - name: Inventaire
+  - name: Equipements
+  - name: Consommables
   - name: Comptes
 
 paths:
@@ -433,7 +434,7 @@ paths:
   # ---------- Inventaire ----------
   /api/equipements:
     get:
-      tags: [Inventaire]
+      tags: [Equipements]
       summary: Liste des équipements
       operationId: listEquipements
       parameters:
@@ -456,7 +457,7 @@ paths:
                         items: { $ref: '#/components/schemas/Equipement' }
         '401': { $ref: '#/components/responses/Erreur' }
     post:
-      tags: [Inventaire]
+      tags: [Equipements]
       summary: Acheter un équipement
       description: Crée l'équipement et débite son prix du compte (transaction ACHAT).
       operationId: acheterEquipement
@@ -476,7 +477,7 @@ paths:
 
   /api/equipements/{id}:
     get:
-      tags: [Inventaire]
+      tags: [Equipements]
       summary: Détail d'un équipement
       operationId: getEquipement
       parameters:
@@ -492,7 +493,7 @@ paths:
 
   /api/equipements/{id}/reparation:
     post:
-      tags: [Inventaire]
+      tags: [Equipements]
       summary: Réparer un équipement
       description: Durabilité au max, statut DISPONIBLE. TODO coût de réparation à confirmer avec le client.
       operationId: reparerEquipement
@@ -510,7 +511,7 @@ paths:
 
   /api/consommables:
     get:
-      tags: [Inventaire]
+      tags: [Consommables]
       summary: Liste des consommables
       operationId: listConsommables
       parameters:
@@ -532,7 +533,7 @@ paths:
                         items: { $ref: '#/components/schemas/Consommable' }
         '401': { $ref: '#/components/responses/Erreur' }
     post:
-      tags: [Inventaire]
+      tags: [Consommables]
       summary: Créer un consommable
       operationId: createConsommable
       requestBody:
@@ -551,7 +552,7 @@ paths:
 
   /api/consommables/{id}/achat:
     post:
-      tags: [Inventaire]
+      tags: [Consommables]
       summary: Acheter du stock
       description: Augmente le stock et débite le compte. Même logique que l'achat auto en cas de manque.
       operationId: acheterConsommable
